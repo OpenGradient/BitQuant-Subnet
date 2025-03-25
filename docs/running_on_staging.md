@@ -76,16 +76,6 @@ Update to the nightly version of Rust:
 
 These steps initialize your local subtensor chain in development mode. These commands will set up and run a local subtensor.
 
-Build the binary with the faucet feature enabled:
-
-```bash
-cargo build -p node-subtensor --profile production --features pow-faucet
-```
-
-**NOTE**: The `--features pow-faucet` option in the above is required if we want to use the command `btcli wallet faucet` [See the below Mint tokens step](#8-mint-tokens-from-faucet).
-
-Next, run the localnet script and turn off the attempt to build the binary (as we have already done this above):
-
 ```bash
 ./scripts/localnet.sh False
 ```
@@ -188,7 +178,7 @@ You will see:
 >> Your balance is: τ200.000000000
 >> Do you want to register a subnet for τ1000.000000000? [y/n]: 
 >> Enter password to unlock key: [YOUR_PASSWORD]
->> ✅ Registered subnetwork with netuid: 1
+>> ✅ Registered subnetwork with netuid: 2
 ```
 
 **NOTE**: The local chain will now have a default `netuid` of 1. The second registration will create a `netuid` 2 and so on, until you reach the subnet limit of 8. If you register more than 8 subnets, then a subnet with the least staked TAO will be replaced by the 9th subnet you register.
@@ -206,7 +196,7 @@ btcli subnet register --wallet.name miner --wallet.hotkey default --subtensor.ch
 Follow the below prompts:
 
 ```bash
->> Enter netuid [1] (1): 1
+>> Enter netuid [1]: 2
 >> Continue Registration? [y/n]: y
 >> ✅ Registered
 ```
@@ -298,13 +288,13 @@ Run the subnet miner and subnet validator. Make sure to specify your subnet para
 Run the subnet miner:
 
 ```bash
-python neurons/miner.py --netuid 1 --subtensor.network ws://127.0.0.1:9944 --wallet.name miner --wallet.hotkey default --logging.debug
+python neurons/miner.py --netuid 2 --subtensor.network ws://127.0.0.1:9944 --wallet.name miner --wallet.hotkey default --logging.debug
 ```
 
 Run the subnet validator:
 
 ```bash
-python neurons/validator.py --netuid 1 --subtensor.network ws://127.0.0.1:9944 --wallet.name validator --wallet.hotkey default --logging.debug
+python neurons/validator.py --netuid 2 --subtensor.network ws://127.0.0.1:9944 --wallet.name validator --wallet.hotkey default --logging.debug
 ```
 
 ## 14. Set weights for your subnet
@@ -319,7 +309,7 @@ btcli root register --wallet.name validator --wallet.hotkey default --subtensor.
 
 ### Boost your subnet on the root subnet
 ```bash
-btcli root boost --netuid 1 --increase 1 --wallet.name validator --wallet.hotkey default --subtensor.chain_endpoint ws://127.0.0.1:9944
+btcli root boost --netuid 2 --increase 1 --wallet.name validator --wallet.hotkey default --subtensor.chain_endpoint ws://127.0.0.1:9944
 ```
 
 ## 15. Verify your incentive mechanism

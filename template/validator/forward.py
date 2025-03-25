@@ -43,8 +43,14 @@ async def forward(self):
     responses = await self.dendrite(
         # Send the query to selected miner axons in the network.
         axons=[self.metagraph.axons[uid] for uid in miner_uids],
-        # Construct a dummy query. This simply contains a single integer.
-        synapse=QuantSynapse(query=QuantQuery("Test Query", "123", ["test", "test2"])),
+        # Create a proper QuantQuery object and pass it to QuantSynapse
+        synapse=QuantSynapse(
+            query=QuantQuery(
+                query="Test Query",
+                userID="123",
+                metadata=["test", "test2"]
+            )
+        ),
         # All responses have the deserialize function called on them before returning.
         # You are encouraged to define your own deserialization function.
         deserialize=True,

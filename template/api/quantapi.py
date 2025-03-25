@@ -20,26 +20,24 @@
 # type: ignore
 import bittensor as bt  # noqa: E402
 from typing import List, Optional, Union, Any, Dict
-from template.protocol import Dummy
+from template.protocol import QuantSynapse,QuantQuery, QuantResponse
 from bittensor.subnets import SubnetsAPI  # noqa: E402
 
 
-class DummyAPI(SubnetsAPI):
+class QuantAPI(SubnetsAPI):
     def __init__(self, wallet: "bt.wallet"):
         super().__init__(wallet)
+        TODO: Update UID
         self.netuid = 33
-        self.name = "dummy"
+        self.name = "quant"
 
-    def prepare_synapse(self, dummy_input: int) -> Dummy:
-        synapse = Dummy(dummy_input=dummy_input)  # Fixed: synapse was undefined
-        return synapse
+    def prepare_synapse(self, query: str, userID: str, metadata: list[str]) -> QuantSynapse:
+        return QuantSynapse(query=QuantQuery(query, userID, metadata)) 
 
-    def process_responses(
-        self, responses: List[Union["bt.Synapse", Any]]
-    ) -> List[int]:
+    def process_responses(self, responses: List[Union["bt.Synapse", Any]]):
         outputs = []
         for response in responses:
             if response.dendrite.status_code != 200:
                 continue
-            outputs.append(response.dummy_output)  # Fixed: return statement in loop is incorrect
+            outputs.append(response.response)
         return outputs

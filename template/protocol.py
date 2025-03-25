@@ -19,39 +19,31 @@
 
 import typing
 import bittensor as bt
+from pydantic import BaseModel
 
 # TODO(developer): Clean up comments
 
-class QuantQuery:
-    def __init__(self, query: str, userID: str, metadata: list[str]):
-        """
-        Initializes a QuantQuery object.
+class QuantQuery(BaseModel):
+    """
+    A query sent from the validator to the miner.
+    """
+    query: str
+    userID: str
+    metadata: list[str]
+    
+    model_config = {"arbitrary_types_allowed": True}
 
-        Args:
-            query (str): The query string to be sent to the miner.
-            userID (str): The wallet address of the user the query is designed for.
-            metadata (list[str]): Additional metadata related to the query.
-        """
-        self.query = query
-        self.userID = userID
-        self.metadata = metadata
-
-class QuantResponse:
-    def __init__(self, response: str, signature: bytes, proofs: list[bytes], metadata: list[str]):
-        """
-        Initializes a QuantResponse object.
-
-        Args:
-            response (str): The response string received from the miner.
-            signature (bytes): The signature associated with the response.
-            proofs (list[bytes]): A list of computational proofsfor validating the response.
-            metadata (list[str]): Additional metadata related to the response.
-        """
-        self.response = response
-        self.signature = signature
-        self.proofs = proofs
-        self.metadata = metadata
-
+class QuantResponse(BaseModel):
+    """
+    A response sent from the miner to the validator.
+    """
+    response: str
+    signature: bytes
+    proofs: list[bytes]
+    metadata: list[str]
+    
+    model_config = {"arbitrary_types_allowed": True}
+    
     def validate(self) -> bool:
         """
         Validates the response proofs as well as the signatures.
@@ -74,21 +66,27 @@ class QuantSynapse(bt.Synapse):
     - response: An optional QuantResponse object which, when filled, represents the response from the miner.
     """
     
-    def __init__(self, query: QuantQuery):
-        """
-        Initializes the QuantSynapse with a given query.
-
-        Args:
-        - query (QuantQuery): The query object representing the input request sent by the validator.
-        """
-        self.query = query
-        self.response = None  # Initialize response as None
-
+    # Add model configuration to allow arbitrary types
+    model_config = {"arbitrary_types_allowed": True}
+    
     # Required request input, filled by sending dendrite caller.
-    query: QuantQuery
+    query: typing.Optional[QuantQuery] = None
 
     # Optional request output, filled by receiving axon.
     response: typing.Optional[QuantResponse] = None
+
+    def __init__(self, query: typing.Optional[QuantQuery] = None, **kwargs):
+        """
+        Initializes the QuantSynapse with the given parameters.
+        This handles either direct instantiation with query or through unpacking attributes.
+        """
+        # Call the parent class constructor with all kwargs except query
+        new_kwargs = {k: v for k, v in kwargs.items() if k != 'query'}
+        super().__init__(**new_kwargs)
+        
+        # Set the query if provided
+        if query is not None:
+            self.query = query
 
     def set_response(self, response: QuantResponse):
         """
@@ -97,6 +95,9 @@ class QuantSynapse(bt.Synapse):
         Args:
             response (QuantResponse): The response object to be set.
         """
+        # Convert to QuantResponse if it's a dict
+        if isinstance(response, dict):
+            response = QuantResponse(**response)
         self.response = response
 
     def deserialize(self) -> QuantResponse:

@@ -4,14 +4,14 @@
 # Copyright © 2023 <your name>
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the “Software”), to deal in the Software without restriction, including without limitation
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation
 # the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 # The above copyright notice and this permission notice shall be included in all copies or substantial portions of
 # the Software.
 
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
 # THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
@@ -19,6 +19,7 @@
 
 
 import time
+import traceback
 
 # Bittensor
 import bittensor as bt
@@ -28,6 +29,7 @@ from template.base.validator import BaseValidatorNeuron
 
 # Bittensor Validator Template:
 from template.validator import forward
+from template.protocol import QuantQuery, QuantResponse, QuantSynapse
 
 
 class Validator(BaseValidatorNeuron):
@@ -56,13 +58,26 @@ class Validator(BaseValidatorNeuron):
         - Rewarding the miners
         - Updating the scores
         """
-        # TODO(developer): Rewrite this function based on your protocol definition.
-        return await forward(self)
+        try:
+            # TODO(developer): Rewrite this function based on your protocol definition.
+            return await forward(self)
+        except Exception as e:
+            bt.logging.error(f"Error in validator forward: {e}")
+            bt.logging.debug(f"Stack trace: {traceback.format_exc()}")
+            # Sleep a bit to avoid tight error loops
+            time.sleep(1)
+            return None
 
 
 # The main function parses the configuration and runs the validator.
 if __name__ == "__main__":
-    with Validator() as validator:
-        while True:
-            bt.logging.info(f"Validator running... {time.time()}")
-            time.sleep(5)
+    try:
+        with Validator() as validator:
+            while True:
+                bt.logging.info(f"Validator running... {time.time()}")
+                time.sleep(5)
+    except KeyboardInterrupt:
+        bt.logging.info("Keyboard interrupt received. Exiting validator.")
+    except Exception as e:
+        bt.logging.error(f"Error running validator: {e}")
+        bt.logging.debug(f"Stack trace: {traceback.format_exc()}")
