@@ -6,3 +6,4 @@ torch>=2
 numpy>=1
 setuptools>=68
 bittensor==9.1.0
+python-dotenv>=1.0.0

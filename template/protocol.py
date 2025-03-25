@@ -20,57 +20,99 @@
 import typing
 import bittensor as bt
 
-# TODO(developer): Rewrite with your protocol definition.
+# TODO(developer): Clean up comments
 
-# This is the protocol for the dummy miner and validator.
-# It is a simple request-response protocol where the validator sends a request
-# to the miner, and the miner responds with a dummy response.
+class QuantQuery:
+    def __init__(self, query: str, userID: str, metadata: list[str]):
+        """
+        Initializes a QuantQuery object.
 
-# ---- miner ----
-# Example usage:
-#   def dummy( synapse: Dummy ) -> Dummy:
-#       synapse.dummy_output = synapse.dummy_input + 1
-#       return synapse
-#   axon = bt.axon().attach( dummy ).serve(netuid=...).start()
+        Args:
+            query (str): The query string to be sent to the miner.
+            userID (str): The wallet address of the user the query is designed for.
+            metadata (list[str]): Additional metadata related to the query.
+        """
+        self.query = query
+        self.userID = userID
+        self.metadata = metadata
 
-# ---- validator ---
-# Example usage:
-#   dendrite = bt.dendrite()
-#   dummy_output = dendrite.query( Dummy( dummy_input = 1 ) )
-#   assert dummy_output == 2
+class QuantResponse:
+    def __init__(self, response: str, signature: bytes, proofs: list[bytes], metadata: list[str]):
+        """
+        Initializes a QuantResponse object.
+
+        Args:
+            response (str): The response string received from the miner.
+            signature (bytes): The signature associated with the response.
+            proofs (list[bytes]): A list of computational proofsfor validating the response.
+            metadata (list[str]): Additional metadata related to the response.
+        """
+        self.response = response
+        self.signature = signature
+        self.proofs = proofs
+        self.metadata = metadata
+
+    def validate(self) -> bool:
+        """
+        Validates the response proofs as well as the signatures.
+
+        Returns:
+            bool: True if the proofs are valid, False otherwise.
+        """
+        # TODO(developer): Implement validation logic for the proofs
+        return True
 
 
-class Dummy(bt.Synapse):
+class QuantSynapse(bt.Synapse):
     """
-    A simple dummy protocol representation which uses bt.Synapse as its base.
-    This protocol helps in handling dummy request and response communication between
+    A simple protocol representation which uses bt.Synapse as its base.
+    This protocol helps in handling request and response communication between
     the miner and the validator.
 
     Attributes:
-    - dummy_input: An integer value representing the input request sent by the validator.
-    - dummy_output: An optional integer value which, when filled, represents the response from the miner.
+    - query: A QuantQuery object representing the input request sent by the validator.
+    - response: An optional QuantResponse object which, when filled, represents the response from the miner.
     """
+    
+    def __init__(self, query: QuantQuery):
+        """
+        Initializes the QuantSynapse with a given query.
+
+        Args:
+        - query (QuantQuery): The query object representing the input request sent by the validator.
+        """
+        self.query = query
+        self.response = None  # Initialize response as None
 
     # Required request input, filled by sending dendrite caller.
-    dummy_input: int
+    query: QuantQuery
 
     # Optional request output, filled by receiving axon.
-    dummy_output: typing.Optional[int] = None
+    response: typing.Optional[QuantResponse] = None
 
-    def deserialize(self) -> int:
+    def set_response(self, response: QuantResponse):
         """
-        Deserialize the dummy output. This method retrieves the response from
-        the miner in the form of dummy_output, deserializes it and returns it
+        Sets the response for the QuantSynapse.
+
+        Args:
+            response (QuantResponse): The response object to be set.
+        """
+        self.response = response
+
+    def deserialize(self) -> QuantResponse:
+        """
+        Deserialize the response. This method retrieves the response from
+        the miner in the form of response, deserializes it and returns it
         as the output of the dendrite.query() call.
 
         Returns:
-        - int: The deserialized response, which in this case is the value of dummy_output.
+        - QuantResponse: The deserialized response, which in this case is the value of response.
 
         Example:
-        Assuming a Dummy instance has a dummy_output value of 5:
-        >>> dummy_instance = Dummy(dummy_input=4)
-        >>> dummy_instance.dummy_output = 5
-        >>> dummy_instance.deserialize()
-        5
+        Assuming a QuantSynapse instance has a response value filled:
+        >>> synapse_instance = QuantSynapse(query=QuantQuery("example", "0x123", []))
+        >>> synapse_instance.response = QuantResponse("response_data", b'signature', [b'proof1'], [])
+        >>> synapse_instance.deserialize()
+        QuantResponse("response_data", b'signature', [b'proof1'], [])
         """
-        return self.dummy_output
+        return self.response

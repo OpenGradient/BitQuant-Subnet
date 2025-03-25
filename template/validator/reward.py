@@ -19,36 +19,40 @@
 import numpy as np
 from typing import List
 import bittensor as bt
+from template.protocol import QuantResponse, QuantQuery
 
-
-def reward(query: int, response: int) -> float:
+def reward(query: QuantQuery, response: QuantResponse) -> float:
     """
-    Reward the miner response to the dummy request. This method returns a reward
-    value for the miner, which is used to update the miner's score.
+    Calculate the reward for a miner's response to a given query. This function evaluates the response
+    and returns a reward value that is used to update the miner's score.
+
+    Args:
+    - query (QuantQuery): The query sent to the miner.
+    - response (QuantResponse): The response received from the miner.
 
     Returns:
     - float: The reward value for the miner.
     """
     bt.logging.info(
-        f"In rewards, query val: {query}, response val: {response}, rewards val: {1.0 if response == query * 2 else 0}"
+        f"Rewarding test amount 0.69"
     )
-    return 1.0 if response == query * 2 else 0
+    return 0.69 
 
 
 def get_rewards(
     self,
-    query: int,
-    responses: List[float],
+    query: QuantQuery,
+    responses: List[QuantResponse],
 ) -> np.ndarray:
     """
-    Returns an array of rewards for the given query and responses.
+    Calculate and return an array of rewards for the provided query and corresponding responses.
 
     Args:
-    - query (int): The query sent to the miner.
-    - responses (List[float]): A list of responses from the miner.
+    - query (QuantQuery): The query sent to the miner.
+    - responses (List[QuantResponse]): A list of QuantResponse objects received from the miner.
 
     Returns:
-    - np.ndarray: An array of rewards for the given query and responses.
+    - np.ndarray: An array of reward values for each response based on the given query.
     """
     # Get all the reward results by iteratively calling your reward() function.
 
