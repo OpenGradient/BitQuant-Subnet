@@ -20,6 +20,8 @@
 # type: ignore
 import bittensor as bt
 import random
+import sys
+import traceback
 from typing import List, Optional, Union, Any, Dict
 from template.protocol import QuantSynapse, QuantQuery, QuantResponse
 
@@ -37,6 +39,7 @@ class QuantAPI:
         Args:
             wallet (bt.wallet): The wallet to use for authentication.
         """
+        print(f"Initializing QuantAPI with wallet {wallet}")
         self.wallet = wallet
         self.name = "quant"
         self.subtensor = None
@@ -51,19 +54,63 @@ class QuantAPI:
             subtensor (bt.subtensor, optional): The subtensor instance to use.
                 If None, a new subtensor instance will be created.
         """
-        if subtensor is None:
-            self.subtensor = bt.subtensor()
-        else:
-            self.subtensor = subtensor
+        try:
+            if subtensor is None:
+                print("No subtensor provided, creating a new one...")
+                self.subtensor = bt.subtensor()
+            else:
+                print("Using provided subtensor instance")
+                self.subtensor = subtensor
+                
+            # Check if subtensor is connected
+            try:
+                block = self.subtensor.get_current_block()
+                print(f"Subtensor connected successfully. Current block: {block}")
+            except Exception as e:
+                print(f"Error checking subtensor connection: {e}")
+                raise
+                
+            # Initialize the metagraph
+            print(f"Initializing metagraph for netuid {self.netuid}")
+            self.metagraph = self.subtensor.metagraph(self.netuid)
             
-        # Initialize the metagraph
-        self.metagraph = self.subtensor.metagraph(self.netuid)
-        
-        # Initialize the dendrite
-        self.dendrite = bt.dendrite(wallet=self.wallet)
-        
-        bt.logging.info(f"Connected to Bittensor network with netuid {self.netuid}")
-        bt.logging.info(f"Metagraph initialized with {len(self.metagraph.hotkeys)} hotkeys")
+            # Do a sanity check on the metagraph
+            if self.metagraph is None:
+                raise ValueError("Failed to initialize metagraph")
+                
+            print(f"Metagraph initialized with {len(self.metagraph.hotkeys)} hotkeys")
+            
+            # Initialize the dendrite with wallet
+            print(f"Initializing dendrite with wallet {self.wallet}")
+            self.dendrite = bt.dendrite(wallet=self.wallet)
+            
+            # Count active axons
+            active_axons = sum(1 for axon in self.metagraph.axons if axon is not None and self._is_axon_valid(axon))
+            
+            print(f"Connected to Bittensor network with netuid {self.netuid}")
+            print(f"Metagraph has {active_axons} active axons out of {len(self.metagraph.axons)} total")
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error connecting to Bittensor network: {e}")
+            traceback.print_exc()
+            return False
+    
+    def _is_axon_valid(self, axon):
+        """Check if an axon has valid connection details."""
+        if axon is None:
+            return False
+            
+        # Check for valid IP and port
+        return (
+            hasattr(axon, 'ip') and 
+            axon.ip is not None and 
+            len(axon.ip) > 0 and
+            hasattr(axon, 'port') and 
+            axon.port is not None and 
+            axon.port > 0
+        )
 
     def prepare_synapse(self, query: str, userID: str, metadata: list[str]) -> QuantSynapse:
         """
@@ -77,15 +124,20 @@ class QuantAPI:
         Returns:
             QuantSynapse: The prepared synapse object.
         """
-        # Create a QuantQuery object
-        query_obj = QuantQuery(
-            query=query,
-            userID=userID,
-            metadata=metadata
-        )
-        
-        # Create and return a QuantSynapse with the query
-        return QuantSynapse(query=query_obj)
+        try:
+            # Create a QuantQuery object
+            query_obj = QuantQuery(
+                query=query,
+                userID=userID,
+                metadata=metadata
+            )
+            
+            # Create and return a QuantSynapse with the query
+            return QuantSynapse(query=query_obj)
+        except Exception as e:
+            print(f"Error preparing synapse: {e}")
+            traceback.print_exc()
+            raise
 
     def get_uids(self, k: int = 5, exclude: Optional[List[int]] = None) -> List[int]:
         """
@@ -99,17 +151,27 @@ class QuantAPI:
             List[int]: A list of UIDs to query.
         """
         if self.metagraph is None:
-            raise ValueError("Must connect to the network before getting UIDs")
+            print("WARNING: Metagraph is None when getting UIDs")
+            return []
             
         if exclude is None:
             exclude = []
             
-        # Get all available UIDs that are not in the exclude list
-        available_uids = [uid for uid in range(len(self.metagraph.S)) 
-                          if uid not in exclude and self.metagraph.axons[uid] is not None]
+        # Get all available UIDs with valid axons
+        available_uids = []
+        for uid in range(len(self.metagraph.axons)):
+            if uid in exclude:
+                continue
+                
+            axon = self.metagraph.axons[uid]
+            if axon is not None and self._is_axon_valid(axon):
+                available_uids.append(uid)
+                
+        print(f"Found {len(available_uids)} available UIDs with valid axons")
         
         # If there are no available UIDs, return an empty list
         if not available_uids:
+            print("WARNING: No available UIDs with valid axons found")
             return []
             
         # If k is greater than the number of available UIDs, return all available UIDs
@@ -137,28 +199,49 @@ class QuantAPI:
             List[QuantSynapse]: The responses from the network.
         """
         if self.metagraph is None or self.dendrite is None:
-            raise ValueError("Must connect to the network before querying")
-            
-        # Prepare the synapse with the query
-        synapse = self.prepare_synapse(query, userID, metadata)
-        
-        # Get the axons to query
-        axons = [self.metagraph.axons[uid] for uid in uids if self.metagraph.axons[uid] is not None]
-        
-        if not axons:
-            bt.logging.warning("No valid axons to query")
+            print("WARNING: Metagraph or dendrite is None when querying")
             return []
             
-        # Query the network
-        bt.logging.info(f"Querying {len(axons)} axons with timeout {timeout}s")
-        responses = self.dendrite.query(
-            axons=axons,
-            synapse=synapse,
-            deserialize=True,
-            timeout=timeout
-        )
-        
-        return responses
+        try:
+            # Prepare the synapse with the query
+            synapse = self.prepare_synapse(query, userID, metadata)
+            
+            # Get the axons to query (only those with valid connection details)
+            valid_axons = []
+            for uid in uids:
+                if uid >= len(self.metagraph.axons):
+                    print(f"WARNING: UID {uid} is out of range")
+                    continue
+                    
+                axon = self.metagraph.axons[uid]
+                if axon is not None and self._is_axon_valid(axon):
+                    valid_axons.append(axon)
+                else:
+                    print(f"WARNING: Skipping UID {uid} due to invalid axon")
+            
+            if not valid_axons:
+                print("WARNING: No valid axons to query")
+                return []
+                
+            # Query the network
+            print(f"Querying {len(valid_axons)} axons with timeout {timeout}s")
+            for i, axon in enumerate(valid_axons):
+                print(f"  Axon {i+1}: {axon.ip}:{axon.port} (UID: {uids[i] if i < len(uids) else 'unknown'})")
+                
+            responses = self.dendrite.query(
+                axons=valid_axons,
+                synapse=synapse,
+                deserialize=True,
+                timeout=timeout
+            )
+            
+            print(f"Received {len(responses)} responses")
+            return responses
+            
+        except Exception as e:
+            print(f"Error querying the network: {e}")
+            traceback.print_exc()
+            return []
 
     def process_responses(self, responses: List[Union["bt.Synapse", Any]]):
         """
@@ -171,13 +254,72 @@ class QuantAPI:
             List[QuantResponse]: The processed responses.
         """
         outputs = []
-        for response in responses:
-            # Skip responses with non-200 status codes
-            if hasattr(response, 'dendrite') and response.dendrite.status_code != 200:
-                continue
+        
+        if not responses:
+            print("WARNING: No responses to process")
+            return outputs
+            
+        try:
+            for i, response in enumerate(responses):
+                print(f"Processing response {i+1}")
                 
-            # Add the response to the outputs
-            if hasattr(response, 'response') and response.response is not None:
-                outputs.append(response.response)
+                # Check if the response is already a QuantResponse object
+                if isinstance(response, QuantResponse):
+                    print(f"  Response {i+1} is already a QuantResponse")
+                    outputs.append(response)
+                    continue
                 
-        return outputs
+                # For traditional format responses with dendrite attribute
+                if hasattr(response, 'dendrite'):
+                    # Skip responses with non-200 status codes
+                    if response.dendrite.status_code != 200:
+                        print(f"  Skipping response {i+1} with status code {response.dendrite.status_code}")
+                        continue
+                        
+                    # Check if response has a valid response attribute
+                    if not hasattr(response, 'response') or response.response is None:
+                        print(f"  WARNING: Response {i+1} has no 'response' attribute or it's None")
+                        continue
+                    
+                    # Check if the response attribute is already a QuantResponse
+                    if isinstance(response.response, QuantResponse):
+                        print(f"  Response {i+1}.response is a QuantResponse, adding to outputs")
+                        outputs.append(response.response)
+                    else:
+                        print(f"  WARNING: Response {i+1}.response is not a QuantResponse")
+                        # Try to handle the case where response.response is the actual content
+                        try:
+                            # If it's a dictionary, try to create a QuantResponse from it
+                            if isinstance(response.response, dict) and 'response' in response.response:
+                                print(f"  Attempting to create QuantResponse from dictionary")
+                                quant_response = QuantResponse(
+                                    response=response.response.get('response'),
+                                    signature=response.response.get('signature'),
+                                    proofs=response.response.get('proofs'),
+                                    metadata=response.response.get('metadata', [])
+                                )
+                                outputs.append(quant_response)
+                            else:
+                                print(f"  Could not process response {i+1} with type {type(response.response)}")
+                        except Exception as e:
+                            print(f"  Error creating QuantResponse from dictionary: {e}")
+                else:
+                    # Handle responses without dendrite attribute but with a response attribute
+                    if hasattr(response, 'response'):
+                        print(f"  Response {i+1} has no 'dendrite' attribute but has 'response'")
+                        
+                        if isinstance(response.response, QuantResponse):
+                            print(f"  Response {i+1}.response is a QuantResponse, adding to outputs")
+                            outputs.append(response.response)
+                        else:
+                            print(f"  Response {i+1}.response is not a QuantResponse, skipping")
+                    else:
+                        print(f"  WARNING: Response {i+1} has no 'dendrite' attribute and no 'response' attribute")
+                
+            print(f"Processed {len(outputs)} valid responses out of {len(responses)} total")
+            return outputs
+                
+        except Exception as e:
+            print(f"Error processing responses: {e}")
+            traceback.print_exc()
+            return []
