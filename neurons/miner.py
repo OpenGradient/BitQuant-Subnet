@@ -26,8 +26,6 @@ import template
 
 # import base miner class which takes care of most of the boilerplate
 from template.base.miner import BaseMinerNeuron
-from template.protocol import QuantResponse, QuantQuery
-
 
 class Miner(BaseMinerNeuron):
     """

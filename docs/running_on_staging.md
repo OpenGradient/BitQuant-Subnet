@@ -82,21 +82,21 @@ These steps initialize your local subtensor chain in development mode. These com
 
 **NOTE**: Watch for any build or initialization outputs in this step. If you are building the project for the first time, this step will take a while to finish building, depending on your hardware.
 
-## 6. Install subnet template
+## 6. Install quant subnet
 
 `cd` to your project directory and clone the bittensor subnet template repository:
 
 ```bash
-git clone https://github.com/opentensor/bittensor-subnet-template.git
+git clone https://github.com/OpenGradient/Quant-Subnet.git 
 ```
 
 Navigate to the cloned repository:
 
 ```bash
-cd bittensor-subnet-template
+cd quant 
 ```
 
-Install the bittensor-subnet-template Python package:
+Install the quant subnet Python package:
 
 ```bash
 python -m pip install -e .

@@ -19,7 +19,6 @@
 
 
 import time
-import traceback
 
 # Bittensor
 import bittensor as bt
@@ -29,7 +28,6 @@ from template.base.validator import BaseValidatorNeuron
 
 # Bittensor Validator Template:
 from template.validator import forward
-from template.protocol import QuantQuery, QuantResponse, QuantSynapse
 
 
 class Validator(BaseValidatorNeuron):
@@ -58,26 +56,13 @@ class Validator(BaseValidatorNeuron):
         - Rewarding the miners
         - Updating the scores
         """
-        try:
-            # TODO(developer): Rewrite this function based on your protocol definition.
-            return await forward(self)
-        except Exception as e:
-            bt.logging.error(f"Error in validator forward: {e}")
-            bt.logging.debug(f"Stack trace: {traceback.format_exc()}")
-            # Sleep a bit to avoid tight error loops
-            time.sleep(1)
-            return None
+        # TODO(developer): Rewrite this function based on your protocol definition.
+        return await forward(self)
 
 
 # The main function parses the configuration and runs the validator.
 if __name__ == "__main__":
-    try:
-        with Validator() as validator:
-            while True:
-                bt.logging.info(f"Validator running... {time.time()}")
-                time.sleep(5)
-    except KeyboardInterrupt:
-        bt.logging.info("Keyboard interrupt received. Exiting validator.")
-    except Exception as e:
-        bt.logging.error(f"Error running validator: {e}")
-        bt.logging.debug(f"Stack trace: {traceback.format_exc()}")
+    with Validator() as validator:
+        while True:
+            bt.logging.info(f"Validator running... {time.time()}")
+            time.sleep(5)
