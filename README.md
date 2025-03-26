@@ -195,7 +195,7 @@ template.SUBNET_LINKS
 This repository is licensed under the MIT License.
 ```text
 # The MIT License (MIT)
-# Copyright © 2024 Opentensor Foundation
+# Copyright © 2025 Quant by OpenGradient
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation

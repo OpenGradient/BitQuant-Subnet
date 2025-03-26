@@ -297,6 +297,11 @@ Run the subnet validator:
 python neurons/validator.py --netuid 2 --subtensor.network ws://127.0.0.1:9944 --wallet.name validator --wallet.hotkey default --logging.debug
 ```
 
+Check if the SubnetAPI is working:
+```bash
+./api_test.py --subtensor.network ws://127.0.0.1:9944 --netuid 2 --wallet.name validator --wallet.hotkey default --timeout 15.0 --specific_uid 2
+```
+
 ## 14. Set weights for your subnet
 
 Register a validator on the root subnet and boost to set weights for your subnet. This is a necessary step to ensure that the subnet is able to receive emmissions.
