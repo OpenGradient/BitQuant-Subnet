@@ -223,7 +223,7 @@ Here is a full example for reference:
 > Take a look at the `prompting/baseminer/miner.py` file [here](https://github.com/opentensor/text-prompting/blob/main/prompting/baseminer/miner.py) for more details.
 
 ```python
-class StreamingTemplateMiner(prompting.Miner):
+class StreamingQuantMiner(prompting.Miner):
     def config(self) -> "bt.Config":
         """
         Returns the configuration object specific to this miner.

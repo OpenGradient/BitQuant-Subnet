@@ -18,9 +18,9 @@
 import time
 import bittensor as bt
 
-from template.protocol import QuantQuery, QuantSynapse
-from template.validator.reward import get_rewards
-from template.utils.uids import get_random_uids
+from quant.protocol import QuantQuery, QuantSynapse
+from quant.validator.reward import get_rewards
+from quant.utils.uids import get_random_uids
 
 
 async def forward(self):

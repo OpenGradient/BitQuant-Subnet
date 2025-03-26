@@ -17,7 +17,7 @@
 import numpy as np
 from typing import List
 import bittensor as bt
-from template.protocol import QuantResponse, QuantQuery
+from quant.protocol import QuantResponse, QuantQuery
 
 def reward(query: QuantQuery, response: QuantResponse) -> float:
     """

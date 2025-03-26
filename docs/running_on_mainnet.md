@@ -24,26 +24,26 @@ After installing `bittensor`, proceed as below:
 
 ## Steps
 
-## 1. Install your subnet template
+## 1. Install your subnet quant
 
 **NOTE: Skip this step if** you already did this during local testing and development.
 
 In your project directory:
 
 ```bash
-git clone https://github.com/opentensor/bittensor-subnet-template.git 
+git clone https://github.com/opentensor/bittensor-subnet-quant.git 
 ```
 
-Next, `cd` into `bittensor-subnet-template` repo directory:
+Next, `cd` into `bittensor-subnet-quant` repo directory:
 
 ```bash
-cd bittensor-subnet-template
+cd bittensor-subnet-quant
 ```
 
-Install the Bittensor subnet template package:
+Install the Bittensor subnet quant package:
 
 ```bash
-python -m pip install -e . # Install your subnet template package
+python -m pip install -e . # Install your subnet quant package
 ```
 
 ## 2. Create wallets 

@@ -23,8 +23,8 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 # Import the QuantAPI
 try:
     print("Attempting to import QuantAPI...")
-    from template.api.quantapi import QuantAPI
-    from template.protocol import QuantResponse, QuantQuery, QuantSynapse
+    from quant.api.quantapi import QuantAPI
+    from quant.protocol import QuantResponse, QuantQuery, QuantSynapse
     print("Successfully imported QuantAPI")
 except Exception as e:
     print(f"Error importing QuantAPI: {e}")

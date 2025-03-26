@@ -270,7 +270,7 @@ class StreamMiner(ABC):
         self.stop_run_thread()
 
 
-class StreamingTemplateMiner(StreamMiner):
+class StreamingQuantMiner(StreamMiner):
     def config(self) -> "bt.Config":
         """
         Returns the configuration object specific to this miner.
@@ -393,6 +393,6 @@ class StreamingTemplateMiner(StreamMiner):
 
 # This is the main function, which runs the miner.
 if __name__ == "__main__":
-    with StreamingTemplateMiner():
+    with StreamingQuantMiner():
         while True:
             time.sleep(1)

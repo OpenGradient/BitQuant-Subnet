@@ -21,7 +21,7 @@ import random
 import sys
 import traceback
 from typing import List, Optional, Union, Any, Dict
-from template.protocol import QuantSynapse, QuantQuery, QuantResponse
+from quant.protocol import QuantSynapse, QuantQuery, QuantResponse
 
 
 class QuantAPI:

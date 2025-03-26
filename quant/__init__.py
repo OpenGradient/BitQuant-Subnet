@@ -15,8 +15,8 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-# This file allows the template directory to be imported as a module
-# It can contain initialization code for the template
+# This file allows the quant directory to be imported as a module
+# It can contain initialization code for the quant
 
 import sys
 import os
@@ -26,11 +26,11 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-# Version of the template
+# Version of the quant
 __version__ = '0.1.0'
 
 # TODO(developer): Change this value when updating your code base.
-# Define the version of the template module.
+# Define the version of the quant module.
 version_split = __version__.split(".")
 __spec_version__ = (
     (1000 * int(version_split[0]))

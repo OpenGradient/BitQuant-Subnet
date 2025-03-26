@@ -19,11 +19,11 @@ import time
 import typing
 import bittensor as bt
 
-# Bittensor Miner Template:
-import template
+# Bittensor Miner Quant:
+import quant
 
 # import base miner class which takes care of most of the boilerplate
-from template.base.miner import BaseMinerNeuron
+from quant.base.miner import BaseMinerNeuron
 
 class Miner(BaseMinerNeuron):
     """
@@ -40,22 +40,22 @@ class Miner(BaseMinerNeuron):
         # TODO(developer): Anything specific to your use case you can do here
 
     async def forward(
-        self, synapse: template.protocol.QuantSynapse
-    ) -> template.protocol.QuantSynapse:
+        self, synapse: quant.protocol.QuantSynapse
+    ) -> quant.protocol.QuantSynapse:
         """
         Processes the incoming 'QuantSynapse' request by generating an appropriate response.
 
         Args:
-            synapse (template.protocol.QuantSynapse): The synapse object containing the query.
+            synapse (quant.protocol.QuantSynapse): The synapse object containing the query.
 
         Returns:
-            template.protocol.QuantSynapse: The synapse object with the response set.
+            quant.protocol.QuantSynapse: The synapse object with the response set.
         """
         try:
             # Check if query is properly set
             if not hasattr(synapse, 'query') or synapse.query is None:
                 bt.logging.warning("Received synapse with no query")
-                response = template.protocol.QuantResponse(
+                response = quant.protocol.QuantResponse(
                     response="Error: No query provided",
                     signature=b"error",
                     proofs=[b"error"],
@@ -63,7 +63,7 @@ class Miner(BaseMinerNeuron):
                 )
             else:
                 # TODO(developer): Replace with actual implementation logic.
-                response = template.protocol.QuantResponse(
+                response = quant.protocol.QuantResponse(
                     response=f"Response to: {synapse.query.query}",
                     signature=b"dummy_signature",
                     proofs=[b"dummy_proof"],
@@ -75,7 +75,7 @@ class Miner(BaseMinerNeuron):
         except Exception as e:
             bt.logging.error(f"Error in forward: {e}")
             # Provide a fallback response in case of error
-            error_response = template.protocol.QuantResponse(
+            error_response = quant.protocol.QuantResponse(
                 response=f"Error processing request: {str(e)}",
                 signature=b"error",
                 proofs=[b"error"],
@@ -85,7 +85,7 @@ class Miner(BaseMinerNeuron):
             return synapse
 
     async def blacklist(
-        self, synapse: template.protocol.QuantSynapse
+        self, synapse: quant.protocol.QuantSynapse
     ) -> typing.Tuple[bool, str]:
         """
         Determines whether an incoming request should be blacklisted and thus ignored.
@@ -129,7 +129,7 @@ class Miner(BaseMinerNeuron):
         return False, "Hotkey recognized!"
 
     async def priority(
-        self, synapse: template.protocol.QuantSynapse
+        self, synapse: quant.protocol.QuantSynapse
     ) -> float:
         """
         The priority function determines the order in which requests are handled.

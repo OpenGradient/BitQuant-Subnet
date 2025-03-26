@@ -18,23 +18,23 @@ Before proceeding further, make sure that you have installed Bittensor. See the 
 
 After installing `bittensor`, proceed as below:
 
-## 1. Install Bittensor subnet template
+## 1. Install Bittensor subnet quant
 
 **NOTE: Skip this step if** you already did this during local testing and development.
 
-`cd` into your project directory and clone the bittensor-subnet-template repo:
+`cd` into your project directory and clone the bittensor-subnet-quant repo:
 
 ```bash
-git clone https://github.com/opentensor/bittensor-subnet-template.git 
+git clone https://github.com/opentensor/bittensor-subnet-quant.git 
 ```
 
-Next, `cd` into bittensor-subnet-template repo directory:
+Next, `cd` into bittensor-subnet-quant repo directory:
 
 ```bash
-cd bittensor-subnet-template # Enter the 
+cd bittensor-subnet-quant # Enter the 
 ```
 
-Install the bittensor-subnet-template package:
+Install the bittensor-subnet-quant package:
 
 ```bash
 python -m pip install -e . 

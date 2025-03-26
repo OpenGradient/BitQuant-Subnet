@@ -84,7 +84,7 @@ These steps initialize your local subtensor chain in development mode. These com
 
 ## 6. Install quant subnet
 
-`cd` to your project directory and clone the bittensor subnet template repository:
+`cd` to your project directory and clone the bittensor subnet quant repository:
 
 ```bash
 git clone https://github.com/OpenGradient/Quant-Subnet.git 

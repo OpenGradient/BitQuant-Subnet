@@ -22,13 +22,13 @@ import bittensor as bt
 import torch
 
 from neurons.validator import Validator
-from template.base.validator import BaseValidatorNeuron
-from template.protocol import Dummy
-from template.utils.uids import get_random_uids
-from template.validator.reward import get_rewards
+from quant.base.validator import BaseValidatorNeuron
+from quant.protocol import Dummy
+from quant.utils.uids import get_random_uids
+from quant.validator.reward import get_rewards
 
 
-class TemplateValidatorNeuronTestCase(unittest.TestCase):
+class QuantValidatorNeuronTestCase(unittest.TestCase):
     """
     This class contains unit tests for the RewardEvent classes.
 

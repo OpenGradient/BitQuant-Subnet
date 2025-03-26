@@ -1,6 +1,6 @@
 <div align="center">
 
-# **Bittensor Subnet Template** <!-- omit in toc -->
+# **Bittensor Subnet Quant** <!-- omit in toc -->
 [![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/bittensor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
 
@@ -12,7 +12,7 @@
 </div>
 
 ---
-- [Quickstarter template](#quickstarter-template)
+- [Quickstarter quant](#quickstarter-quant)
 - [Introduction](#introduction)
   - [Example](#example)
 - [Installation](#installation)
@@ -24,13 +24,13 @@
 - [License](#license)
 
 ---
-## Quickstarter template
+## Quickstarter quant
 
-This template contains all the required installation instructions, scripts, and files and functions for:
+This quant contains all the required installation instructions, scripts, and files and functions for:
 - Building Bittensor subnets.
 - Creating custom incentive mechanisms and running these mechanisms on the subnets. 
 
-In order to simplify the building of subnets, this template abstracts away the complexity of the underlying blockchain and other boilerplate code. While the default behavior of the template is sufficient for a simple subnet, you should customize the template in order to meet your specific requirements.
+In order to simplify the building of subnets, this quant abstracts away the complexity of the underlying blockchain and other boilerplate code. While the default behavior of the quant is sufficient for a simple subnet, you should customize the quant in order to meet your specific requirements.
 ---
 
 ## Introduction
@@ -48,14 +48,14 @@ Each subnet consists of:
 - A protocol using which the subnet miners and subnet validators interact with one another. This protocol is part of the incentive mechanism.
 - The Bittensor API using which the subnet miners and subnet validators interact with Bittensor's onchain consensus engine [Yuma Consensus](https://bittensor.com/documentation/validating/yuma-consensus). The Yuma Consensus is designed to drive these actors: subnet validators and subnet miners, into agreement on who is creating value and what that value is worth. 
 
-This starter template is split into three primary files. To write your own incentive mechanism, you should edit these files. These files are:
-1. `template/protocol.py`: Contains the definition of the protocol used by subnet miners and subnet validators.
+This starter quant is split into three primary files. To write your own incentive mechanism, you should edit these files. These files are:
+1. `quant/protocol.py`: Contains the definition of the protocol used by subnet miners and subnet validators.
 2. `neurons/miner.py`: Script that defines the subnet miner's behavior, i.e., how the subnet miner responds to requests from subnet validators.
 3. `neurons/validator.py`: This script defines the subnet validator's behavior, i.e., how the subnet validator requests information from the subnet miners and determines the scores.
 
 ### Example
 
-The Bittensor Subnet 1 for Text Prompting is built using this template. See [prompting](https://github.com/macrocosm-os/prompting) for how to configure the files and how to add monitoring and telemetry and support multiple miner types. Also see this Subnet 1 in action on [Taostats](https://taostats.io/subnets/netuid-1/) explorer.
+The Bittensor Subnet 1 for Text Prompting is built using this quant. See [prompting](https://github.com/macrocosm-os/prompting) for how to configure the files and how to add monitoring and telemetry and support multiple miner types. Also see this Subnet 1 in action on [Taostats](https://taostats.io/subnets/netuid-1/) explorer.
 
 ---
 
@@ -80,22 +80,22 @@ Before you proceed with the installation of the subnet, note the following:
 
 ## Writing your own incentive mechanism
 
-As described in [Quickstarter template](#quickstarter-template) section above, when you are ready to write your own incentive mechanism, update this template repository by editing the following files. The code in these files contains detailed documentation on how to update the template. Read the documentation in each of the files to understand how to update the template. There are multiple **TODO**s in each of the files identifying sections you should update. These files are:
-- `template/protocol.py`: Contains the definition of the wire-protocol used by miners and validators.
+As described in [Quickstarter quant](#quickstarter-quant) section above, when you are ready to write your own incentive mechanism, update this quant repository by editing the following files. The code in these files contains detailed documentation on how to update the quant. Read the documentation in each of the files to understand how to update the quant. There are multiple **TODO**s in each of the files identifying sections you should update. These files are:
+- `quant/protocol.py`: Contains the definition of the wire-protocol used by miners and validators.
 - `neurons/miner.py`: Script that defines the miner's behavior, i.e., how the miner responds to requests from validators.
 - `neurons/validator.py`: This script defines the validator's behavior, i.e., how the validator requests information from the miners and determines the scores.
-- `template/forward.py`: Contains the definition of the validator's forward pass.
-- `template/reward.py`: Contains the definition of how validators reward miner responses.
+- `quant/forward.py`: Contains the definition of the validator's forward pass.
+- `quant/reward.py`: Contains the definition of how validators reward miner responses.
 
 In addition to the above files, you should also update the following files:
 - `README.md`: This file contains the documentation for your project. Update this file to reflect your project's documentation.
 - `CONTRIBUTING.md`: This file contains the instructions for contributing to your project. Update this file to reflect your project's contribution guidelines.
-- `template/__init__.py`: This file contains the version of your project.
+- `quant/__init__.py`: This file contains the version of your project.
 - `setup.py`: This file contains the metadata about your project. Update this file to reflect your project's metadata.
 - `docs/`: This directory contains the documentation for your project. Update this directory to reflect your project's documentation.
 
 __Note__
-The `template` directory should also be renamed to your project name.
+The `quant` directory should also be renamed to your project name.
 ---
 
 # Writing your own subnet API
@@ -178,10 +178,10 @@ You can use a subnet API to the registry by doing the following:
 
 
 # Subnet Links
-In order to see real-world examples of subnets in-action, see the `subnet_links.py` document or access them from inside the `template` package by:
+In order to see real-world examples of subnets in-action, see the `subnet_links.py` document or access them from inside the `quant` package by:
 ```python
-import template
-template.SUBNET_LINKS
+import quant
+quant.SUBNET_LINKS
 [{'name': 'sn0', 'url': ''},
  {'name': 'sn1', 'url': 'https://github.com/opentensor/prompting/'},
  {'name': 'sn2', 'url': 'https://github.com/bittranslateio/bittranslate/'},
