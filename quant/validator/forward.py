@@ -16,11 +16,13 @@
 # DEALINGS IN THE SOFTWARE.
 
 import time
+import random
 import bittensor as bt
 
 from quant.protocol import QuantQuery, QuantSynapse
 from quant.validator.reward import get_rewards
 from quant.utils.uids import get_random_uids
+from quant.utils.questions import questions
 
 
 async def forward(self):
@@ -44,7 +46,7 @@ async def forward(self):
         # Create a proper QuantQuery object and pass it to QuantSynapse
         synapse=QuantSynapse(
             query=QuantQuery(
-                query="Test Query",
+                query=random.choice(questions),
                 userID="123",
                 metadata=["test", "test2"]
             )
