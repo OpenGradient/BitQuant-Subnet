@@ -18,11 +18,12 @@ import numpy as np
 from typing import List
 import bittensor as bt
 from quant.protocol import QuantResponse, QuantQuery
+from quant.TwoLigma.api.simple_client import subnet_evaluation
 
 def reward(query: QuantQuery, response: QuantResponse) -> float:
     """
-    Calculate the reward for a miner's response to a given query. This function evaluates the response
-    and returns a reward value that is used to update the miner's score.
+    Calculate the reward for a miner's response to a given query.
+    Uses the subnet_evaluation function to determine the quality of the response.
 
     Args:
     - query (QuantQuery): The query sent to the miner.
@@ -31,10 +32,12 @@ def reward(query: QuantQuery, response: QuantResponse) -> float:
     Returns:
     - float: The reward value for the miner.
     """
-    bt.logging.info(
-        f"Rewarding test amount 0.69"
-    )
-    return 0.69 
+    bt.logging.info(f"Evaluating response for query: {query} and response: {response}")
+    
+    # Call subnet_evaluation to get the reward score
+    reward_score = subnet_evaluation(query, response)
+    
+    return reward_score 
 
 
 def get_rewards(

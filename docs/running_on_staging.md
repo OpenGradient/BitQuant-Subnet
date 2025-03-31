@@ -96,6 +96,18 @@ Navigate to the cloned repository:
 cd quant 
 ```
 
+Update the .env variables with your keys and config preferences
+``` bash
+vi .env
+```
+
+Make virtualenv
+```bash
+make venv
+source venv/bin/activate
+source .env
+```
+
 Install the quant subnet Python package:
 
 ```bash

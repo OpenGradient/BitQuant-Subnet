@@ -22,8 +22,14 @@ import bittensor as bt
 # Bittensor Miner Quant:
 import quant
 
+# Import the subnet_query function from TwoLigma client
+from quant.TwoLigma.api.simple_client import subnet_query
+
 # import base miner class which takes care of most of the boilerplate
 from quant.base.miner import BaseMinerNeuron
+
+# Import the shared Quant agent server module
+from neurons import quant_agent_server
 
 class Miner(BaseMinerNeuron):
     """
@@ -43,7 +49,8 @@ class Miner(BaseMinerNeuron):
         self, synapse: quant.protocol.QuantSynapse
     ) -> quant.protocol.QuantSynapse:
         """
-        Processes the incoming 'QuantSynapse' request by generating an appropriate response.
+        Processes the incoming 'QuantSynapse' request by forwarding it to the TwoLigma subnet
+        using the subnet_query function.
 
         Args:
             synapse (quant.protocol.QuantSynapse): The synapse object containing the query.
@@ -59,29 +66,45 @@ class Miner(BaseMinerNeuron):
                     response="Error: No query provided",
                     signature=b"error",
                     proofs=[b"error"],
-                    metadata=[]
+                    metadata={}
                 )
             else:
-                # TODO(developer): Replace with actual implementation logic.
-                response = quant.protocol.QuantResponse(
-                    response=f"Response to: {synapse.query.query}",
-                    signature=b"dummy_signature",
-                    proofs=[b"dummy_proof"],
-                    metadata=synapse.query.metadata or []
-                )
+                bt.logging.info(f"Processing query: {synapse.query.query}")
+                bt.logging.info(f"From userID: {synapse.query.userID}")
+                bt.logging.info(f"Metadata: {synapse.query.metadata}")
                 
-            synapse.set_response(response)
+                # Forward the query to the quant agent using subnet_query
+                response = subnet_query(synapse.query)
+                
+                if response is None:
+                    response = quant.protocol.QuantResponse(
+                        response="Error: Failed to communicate with quant agent",
+                        signature=b"error",
+                        proofs=[b"error"],
+                        metadata=synapse.query.metadata or {}
+                    )
+                else:
+                    bt.logging.info(f"Received response from quant agent: {response.response[:100]}...")
+                    # Convert to dictionary and then set the response
+                    response_dict = {
+                        "response": response.response,
+                        "signature": response.signature,
+                        "proofs": response.proofs,
+                        "metadata": response.metadata
+                    }
+                    synapse.response = response_dict
             return synapse
         except Exception as e:
             bt.logging.error(f"Error in forward: {e}")
             # Provide a fallback response in case of error
-            error_response = quant.protocol.QuantResponse(
-                response=f"Error processing request: {str(e)}",
-                signature=b"error",
-                proofs=[b"error"],
-                metadata=[]
-            )
-            synapse.set_response(error_response)
+            error_response = {
+                "response": f"Error processing request: {str(e)}",
+                "signature": b"error",
+                "proofs": [b"error"],
+                "metadata": {}
+            }
+            # Set the response as a dictionary
+            synapse.response = error_response
             return synapse
 
     async def blacklist(
@@ -90,41 +113,34 @@ class Miner(BaseMinerNeuron):
         """
         Determines whether an incoming request should be blacklisted and thus ignored.
         """
-        # Get the dendrite.hotkey from axon_info if it exists
-        hotkey = None
-        if hasattr(synapse, 'dendrite') and synapse.dendrite is not None:
-            hotkey = synapse.dendrite.hotkey
-        elif hasattr(synapse, 'axon_info') and synapse.axon_info is not None:
-            hotkey = synapse.axon_info.hotkey
-            
-        if hotkey is None:
+        if synapse.dendrite is None or synapse.dendrite.hotkey is None:
             bt.logging.warning(
                 "Received a request without a dendrite or hotkey."
             )
             return True, "Missing dendrite or hotkey"
 
         # TODO(developer): Define how miners should blacklist requests.
-        try:
-            uid = self.metagraph.hotkeys.index(hotkey)
-        except ValueError:
-            # Hotkey not found in metagraph
-            if not self.config.blacklist.allow_non_registered:
-                bt.logging.trace(
-                    f"Blacklisting un-registered hotkey {hotkey}"
-                )
-                return True, "Unrecognized hotkey"
-            uid = -1  # Invalid UID for hotkeys not in metagraph
+        uid = self.metagraph.hotkeys.index(synapse.dendrite.hotkey)
+        if (
+            not self.config.blacklist.allow_non_registered
+            and synapse.dendrite.hotkey not in self.metagraph.hotkeys
+        ):
+            # Ignore requests from un-registered entities.
+            bt.logging.trace(
+                f"Blacklisting un-registered hotkey {synapse.dendrite.hotkey}"
+            )
+            return True, "Unrecognized hotkey"
 
-        if uid != -1 and self.config.blacklist.force_validator_permit:
+        if self.config.blacklist.force_validator_permit:
             # If the config is set to force validator permit, then we should only allow requests from validators.
             if not self.metagraph.validator_permit[uid]:
                 bt.logging.warning(
-                    f"Blacklisting a request from non-validator hotkey {hotkey}"
+                    f"Blacklisting a request from non-validator hotkey {synapse.dendrite.hotkey}"
                 )
                 return True, "Non-validator hotkey"
 
         bt.logging.trace(
-            f"Not Blacklisting recognized hotkey {hotkey}"
+            f"Not Blacklisting recognized hotkey {synapse.dendrite.hotkey}"
         )
         return False, "Hotkey recognized!"
 
@@ -161,14 +177,30 @@ class Miner(BaseMinerNeuron):
         )
         return priority
 
-
 # This is the main function, which runs the miner.
 if __name__ == "__main__":
     try:
+        # Set up and start the Quant agent server using the shared module
+        quant_agent_server_process = quant_agent_server.setup_quant_agent_server()
+        
+        # Log whether we're using an existing server or started a new one
+        if quant_agent_server_process is None:
+            bt.logging.info("Using an existing Quant agent server or continuing without one.")
+        else:
+            bt.logging.info(f"Started a new Quant agent server with PID: {quant_agent_server_process.pid}")
+            
         with Miner() as miner:
             bt.logging.info("Starting miner...")
             while True:
                 bt.logging.info(f"Miner running... {time.time()}")
+                
+                # Check if Quant agent server is still running (only if we're managing it)
+                if quant_agent_server_process is not None and not quant_agent_server.check_quant_agent_server(quant_agent_server_process):
+                    bt.logging.error("Quant agent server is no longer running.")
+                    bt.logging.warning("Continuing miner operation, but queries may fail.")
+                    # Set to None so we don't keep checking
+                    quant_agent_server_process = None
+                
                 time.sleep(5)
     except KeyboardInterrupt:
         bt.logging.info("Keyboard interrupt received. Exiting miner.")
@@ -177,3 +209,8 @@ if __name__ == "__main__":
         import traceback
         bt.logging.debug(f"Stack trace: {traceback.format_exc()}")
         raise
+    finally:
+        # The cleanup will be handled by the atexit handler in the shared module.
+        # Since we registered the atexit handler in quant_agent_server, it will only clean up
+        # the server if it was started by this process.
+        pass

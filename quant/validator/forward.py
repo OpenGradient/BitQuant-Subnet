@@ -15,6 +15,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import os
 import time
 import random
 import bittensor as bt
@@ -38,17 +39,25 @@ async def forward(self):
     # TODO(developer): Define how the validator selects a miner to query, how often, etc.
     # get_random_uids is an example method, but you can replace it with your own.
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+    if not os.getenv("SOLANA_WALLET"):
+        bt.logging.error("SOLANA_WALLET environment variable is not set. Using a default value.")
+        wallet_address = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
 
     # The dendrite client queries the network.
     responses = await self.dendrite(
         # Send the query to selected miner axons in the network.
         axons=[self.metagraph.axons[uid] for uid in miner_uids],
         # Create a proper QuantQuery object and pass it to QuantSynapse
+
         synapse=QuantSynapse(
             query=QuantQuery(
                 query=random.choice(questions),
-                userID="123",
-                metadata=["test", "test2"]
+                userID=wallet_address,
+                metadata={
+                    "Create_Proof": "True", 
+                    "Type": "Validator_Test",
+                    "validator_id": self.wallet.hotkey.ss58_address  # Add validator's hotkey as identifier
+                }
             )
         ),
         # All responses have the deserialize function called on them before returning.
@@ -65,4 +74,4 @@ async def forward(self):
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
     self.update_scores(rewards, miner_uids)
-    time.sleep(10)
+    time.sleep(int(os.getenv("VALIDATOR_CADENCE", 30)))

@@ -19,15 +19,13 @@ import typing
 import bittensor as bt
 from pydantic import BaseModel
 
-# TODO(developer): Clean up comments
-
 class QuantQuery(BaseModel):
     """
     A query sent from the validator to the miner.
     """
     query: str
     userID: str
-    metadata: list[str]
+    metadata: dict
     
     model_config = {"arbitrary_types_allowed": True}
 
@@ -38,7 +36,7 @@ class QuantResponse(BaseModel):
     response: str
     signature: bytes
     proofs: list[bytes]
-    metadata: list[str]
+    metadata: dict
     
     model_config = {"arbitrary_types_allowed": True}
     
@@ -86,17 +84,6 @@ class QuantSynapse(bt.Synapse):
         if query is not None:
             self.query = query
 
-    def set_response(self, response: QuantResponse):
-        """
-        Sets the response for the QuantSynapse.
-
-        Args:
-            response (QuantResponse): The response object to be set.
-        """
-        # Convert to QuantResponse if it's a dict
-        if isinstance(response, dict):
-            response = QuantResponse(**response)
-        self.response = response
 
     def deserialize(self) -> QuantResponse:
         """
@@ -109,9 +96,9 @@ class QuantSynapse(bt.Synapse):
 
         Example:
         Assuming a QuantSynapse instance has a response value filled:
-        >>> synapse_instance = QuantSynapse(query=QuantQuery("example", "0x123", []))
-        >>> synapse_instance.response = QuantResponse("response_data", b'signature', [b'proof1'], [])
+        >>> synapse_instance = QuantSynapse(query=QuantQuery("example", "0x123", {}))
+        >>> synapse_instance.response = QuantResponse("response_data", b'signature', [b'proof1'], {})
         >>> synapse_instance.deserialize()
-        QuantResponse("response_data", b'signature', [b'proof1'], [])
+        QuantResponse("response_data", b'signature', [b'proof1'], {})
         """
         return self.response

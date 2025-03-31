@@ -17,6 +17,7 @@
 
 
 import time
+import sys
 
 # Bittensor
 import bittensor as bt
@@ -27,6 +28,8 @@ from quant.base.validator import BaseValidatorNeuron
 # Bittensor Validator Quant:
 from quant.validator import forward
 
+# Import the shared Quant agent server module
+from neurons import quant_agent_server
 
 class Validator(BaseValidatorNeuron):
     """
@@ -57,10 +60,39 @@ class Validator(BaseValidatorNeuron):
         # TODO(developer): Rewrite this function based on your protocol definition.
         return await forward(self)
 
-
 # The main function parses the configuration and runs the validator.
 if __name__ == "__main__":
-    with Validator() as validator:
-        while True:
-            bt.logging.info(f"Validator running... {time.time()}")
-            time.sleep(5)
+    try:
+        # Set up and start the Quant agent server using the shared module
+        quant_agent_server_process = quant_agent_server.setup_quant_agent_server()
+        
+        # Log whether we're using an existing server or started a new one
+        if quant_agent_server_process is None:
+            bt.logging.info("Using an existing Quant agent server or continuing without one.")
+        else:
+            bt.logging.info(f"Started a new Quant agent server with PID: {quant_agent_server_process.pid}")
+            
+        with Validator() as validator:
+            while True:
+                bt.logging.info(f"Validator running... {time.time()}")
+                
+                # Check if Quant agent server is still running (only if we're managing it)
+                if quant_agent_server_process is not None and not quant_agent_server.check_quant_agent_server(quant_agent_server_process):
+                    bt.logging.error("Quant agent server is no longer running.")
+                    bt.logging.warning("Continuing validator operation, but queries may fail.")
+                    # Set to None so we don't keep checking
+                    quant_agent_server_process = None
+                    
+                time.sleep(5)
+    except KeyboardInterrupt:
+        bt.logging.info("Keyboard interrupt received. Exiting validator.")
+    except Exception as e:
+        bt.logging.error(f"Error running validator: {e}")
+        import traceback
+        bt.logging.debug(f"Stack trace: {traceback.format_exc()}")
+        raise
+    finally:
+        # The cleanup will be handled by the atexit handler in the shared module.
+        # Since we registered the atexit handler in quant_agent_server, it will only clean up
+        # the server if it was started by this process.
+        pass

@@ -110,32 +110,27 @@ class QuantAPI:
             axon.port > 0
         )
 
-    def prepare_synapse(self, query: str, userID: str, metadata: list[str]) -> QuantSynapse:
+    def prepare_synapse(self, query: str, userID: str, metadata: dict) -> QuantSynapse:
         """
-        Prepare a QuantSynapse object with the given query.
+        Prepare a QuantSynapse with the given query and userID.
         
         Args:
             query (str): The query string.
-            userID (str): The ID of the user making the query.
-            metadata (list[str]): Additional metadata for the query.
+            userID (str): The user ID for the query.
+            metadata (dict): Any additional metadata to include with the query.
             
         Returns:
-            QuantSynapse: The prepared synapse object.
+            QuantSynapse: The prepared synapse.
         """
-        try:
-            # Create a QuantQuery object
-            query_obj = QuantQuery(
-                query=query,
-                userID=userID,
-                metadata=metadata
-            )
-            
-            # Create and return a QuantSynapse with the query
-            return QuantSynapse(query=query_obj)
-        except Exception as e:
-            print(f"Error preparing synapse: {e}")
-            traceback.print_exc()
-            raise
+        # Create a QuantQuery
+        quant_query = QuantQuery(
+            query=query,
+            userID=userID,
+            metadata=metadata
+        )
+        
+        # Create and return a QuantSynapse with the query
+        return QuantSynapse(query=quant_query)
 
     def get_uids(self, k: int = 5, exclude: Optional[List[int]] = None) -> List[int]:
         """
@@ -182,19 +177,19 @@ class QuantAPI:
         # Return the top k UIDs
         return sorted_uids[:k]
 
-    def query(self, uids, query: str, userID: str, metadata: list[str], timeout: float = 12.0):
+    def query(self, uids, query: str, userID: str, metadata: dict, timeout: float = 12.0):
         """
-        Query the network with the given parameters.
+        Query the network with the given query.
         
         Args:
-            uids (List[int]): The UIDs to query.
+            uids: The UIDs to query.
             query (str): The query string.
-            userID (str): The ID of the user making the query.
-            metadata (list[str]): Additional metadata for the query.
-            timeout (float, optional): The query timeout in seconds.
+            userID (str): The user ID for the query.
+            metadata (dict): Any additional metadata to include with the query.
+            timeout (float): The timeout for the query in seconds.
             
         Returns:
-            List[QuantSynapse]: The responses from the network.
+            List[QuantResponse]: The responses from the network.
         """
         if self.metagraph is None or self.dendrite is None:
             print("WARNING: Metagraph or dendrite is None when querying")
@@ -294,7 +289,7 @@ class QuantAPI:
                                     response=response.response.get('response'),
                                     signature=response.response.get('signature'),
                                     proofs=response.response.get('proofs'),
-                                    metadata=response.response.get('metadata', [])
+                                    metadata=response.response.get('metadata', {})
                                 )
                                 outputs.append(quant_response)
                             else:

@@ -1,0 +1,8 @@
+[submodule "quant/quant/TwoLigma"]
+	path = quant/quant/TwoLigma
+	url = https://github.com/OpenGradient/TwoLigma.git
+	branch = localnet
+[submodule "quant/TwoLigma"]
+	path = quant/TwoLigma
+	url = https://github.com/OpenGradient/TwoLigma.git
+	branch = localnet
