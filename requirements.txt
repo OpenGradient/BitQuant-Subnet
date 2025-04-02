@@ -22,4 +22,4 @@ scikit-learn>=1.6.0
 boto3>=1.35.0
 solana>=0.36.6
 ratelimit>=2.2.1
-opengradient>=0.4.11
+opengradient==0.4.12b1
