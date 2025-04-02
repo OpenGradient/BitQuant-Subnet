@@ -72,12 +72,12 @@ Update to the nightly version of Rust:
 ./subtensor/scripts/init.sh
 ```
 
-## 5. Initialize 
+## 5. Initialize
 
 These steps initialize your local subtensor chain in development mode. These commands will set up and run a local subtensor.
 
 ```bash
-./scripts/localnet.sh False
+./subtensor/scripts/localnet.sh False
 ```
 
 **NOTE**: Watch for any build or initialization outputs in this step. If you are building the project for the first time, this step will take a while to finish building, depending on your hardware.
