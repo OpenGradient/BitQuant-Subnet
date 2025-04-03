@@ -127,6 +127,10 @@ Create a coldkey for the owner role:
 btcli wallet new_coldkey --wallet.name owner
 ```
 
+```bash
+btcli wallet new_hotkey --wallet.name owner --wallet.hotkey default
+```
+
 Set up the miner's wallets:
 
 ```bash
