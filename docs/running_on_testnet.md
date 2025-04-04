@@ -31,7 +31,7 @@ git clone https://github.com/opentensor/bittensor-subnet-quant.git
 Next, `cd` into bittensor-subnet-quant repo directory:
 
 ```bash
-cd bittensor-subnet-quant # Enter the 
+cd bittensor-subnet-quant  
 ```
 
 Install the bittensor-subnet-quant package:
