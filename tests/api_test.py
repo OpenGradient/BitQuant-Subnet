@@ -60,11 +60,16 @@ def display_response(index: int, response: QuantResponse):
         print(f"Metadata: {response.metadata}")
     print("-" * 50)
 
-def test_query(quant_api: QuantAPI, args, query: str, user_id: str, metadata: List[str]):
+def test_query(quant_api: QuantAPI, args, query: str, user_id: str, metadata: dict):
     """Test a single query and return the responses."""
     try:
         print(f"\nSubmitting query: '{query}'")
         print(f"User ID: {user_id}")
+        
+        # Convert metadata list to dictionary if it's a list
+        if isinstance(metadata, list):
+            metadata = {item: True for item in metadata}
+            
         print(f"Metadata: {metadata}")
         
         # Check if the API is connected
@@ -185,12 +190,12 @@ def main():
             {
                 "query": "What is the current market cap of Bitcoin?",
                 "user_id": wallet.hotkey.ss58_address,
-                "metadata": ["crypto", "market_data", "bitcoin"]
+                "metadata": {"topics": ["crypto", "market_data", "bitcoin"]}
             },
             {
                 "query": "What is the trading volume of Ethereum in the last 24 hours?",
                 "user_id": wallet.hotkey.ss58_address,
-                "metadata": ["crypto", "volume", "ethereum", "24h"]
+                "metadata": {"topics": ["crypto", "volume", "ethereum", "24h"]}
             }
         ]
         
