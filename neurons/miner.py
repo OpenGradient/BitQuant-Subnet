@@ -86,6 +86,7 @@ class Miner(BaseMinerNeuron):
                 else:
                     bt.logging.info(f"Received response from quant agent: {response.response[:100]}...")
                     # Convert to dictionary and then set the response
+                    response.metadata["miner_id"] = self.wallet.hotkey.ss58_address
                     response_dict = {
                         "response": response.response,
                         "signature": response.signature,
