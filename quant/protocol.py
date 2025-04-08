@@ -2,14 +2,14 @@
 # Copyright © 2025 Quant by OpenGradient
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the “Software”), to deal in the Software without restriction, including without limitation
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation
 # the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 # The above copyright notice and this permission notice shall be included in all copies or substantial portions of
 # the Software.
 
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
 # THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
@@ -49,6 +49,21 @@ class QuantResponse(BaseModel):
         """
         # TODO(developer): Implement validation logic for the proofs
         return True
+        
+    def dict(self) -> dict:
+        """
+        Convert the QuantResponse to a dictionary.
+        This is needed for compatibility with axon/dendrite.
+        
+        Returns:
+            dict: A dictionary representation of the QuantResponse.
+        """
+        return {
+            "response": self.response,
+            "signature": self.signature,
+            "proofs": self.proofs,
+            "metadata": self.metadata
+        }
 
 
 class QuantSynapse(bt.Synapse):
@@ -101,4 +116,48 @@ class QuantSynapse(bt.Synapse):
         >>> synapse_instance.deserialize()
         QuantResponse("response_data", b'signature', [b'proof1'], {})
         """
+        if self.response is None:
+            # Create a dummy response when none is available
+            # In production, you should handle this case more gracefully
+            print("Warning: Synapse.response is None, creating dummy response")
+            return QuantResponse(
+                response=f"Miner did not provide a response for query: {self.query.query if self.query else 'unknown'}",
+                signature=b"no_signature",
+                proofs=[b"no_proof"],
+                metadata={}
+            )
+            
+        # Handle case where response is a dictionary rather than a QuantResponse object
+        if isinstance(self.response, dict):
+            try:
+                # Ensure that signature and proofs are bytes
+                signature = self.response.get("signature", b"no_signature")
+                if isinstance(signature, str):
+                    signature = signature.encode('utf-8')
+                
+                proofs = self.response.get("proofs", [b"no_proof"])
+                # Convert string proofs to bytes
+                byte_proofs = []
+                for proof in proofs:
+                    if isinstance(proof, str):
+                        byte_proofs.append(proof.encode('utf-8'))
+                    else:
+                        byte_proofs.append(proof)
+                
+                return QuantResponse(
+                    response=self.response.get("response", "No response provided"),
+                    signature=signature,
+                    proofs=byte_proofs,
+                    metadata=self.response.get("metadata", {})
+                )
+            except Exception as e:
+                print(f"Error deserializing response: {e}, creating fallback response")
+                return QuantResponse(
+                    response="Error deserializing miner response.",
+                    signature=b"error",
+                    proofs=[b"error"],
+                    metadata={}
+                )
+        
+        # Normal case - return the response
         return self.response

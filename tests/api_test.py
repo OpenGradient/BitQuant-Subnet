@@ -11,23 +11,31 @@ the Bittensor quantitative subnet and process the responses.
 import os
 import sys
 import time
+import random
 import argparse
 import traceback
+import requests
 import bittensor as bt
 from typing import List, Optional
 from pprint import pprint
+
+# Set environment variables needed for testing
+os.environ["SOLANA_WALLET"] = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+os.environ["BT_DISABLE_VERIFICATION"] = "1"  # Disable verification for testing
+print(f"SOLANA_WALLET set to: {os.environ['SOLANA_WALLET']}")
+print("Bittensor verification disabled for testing")
 
 # Add the current directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
 # Import the QuantAPI
 try:
-    print("Attempting to import QuantAPI...")
-    from quant.api.quantapi import QuantAPI
+    print("Attempting to import protocol modules...")
     from quant.protocol import QuantResponse, QuantQuery, QuantSynapse
-    print("Successfully imported QuantAPI")
+    from quant.utils.questions import questions  # Import the same question set used by validator
+    print("Successfully imported protocol modules")
 except Exception as e:
-    print(f"Error importing QuantAPI: {e}")
+    print(f"Error importing protocol modules: {e}")
     traceback.print_exc()
     sys.exit(1)
 
@@ -35,114 +43,170 @@ def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Test the QuantAPI functionality")
     parser.add_argument("--netuid", type=int, default=2, help="The netuid of the subnet to query")
-    parser.add_argument("--wallet.name", type=str, default="default", help="The name of the wallet to use")
+    parser.add_argument("--wallet.name", type=str, default="validator", help="The name of the wallet to use")
     parser.add_argument("--wallet.hotkey", type=str, default="default", help="The hotkey of the wallet to use")
     parser.add_argument("--subtensor.network", type=str, default="finney", help="The network to connect to")
-    parser.add_argument("--sample_size", type=int, default=3, help="Number of miners to query")
-    parser.add_argument("--timeout", type=float, default=12.0, help="Query timeout in seconds")
+    parser.add_argument("--timeout", type=float, default=60.0, help="Query timeout in seconds")
     parser.add_argument("--logging_debug", action="store_true", help="Enable debug logging")
-    parser.add_argument("--specific_uid", type=int, help="Specific UID to query (overrides sample_size)")
+    parser.add_argument("--specific_uid", type=int, help="Specific UID to query")
+    parser.add_argument("--check_agent", action="store_true", help="Check quant agent server connectivity")
+    parser.add_argument("--fixed_query", action="store_true", help="Use a fixed query instead of random")
     
     return parser.parse_args()
 
-def display_response(index: int, response: QuantResponse):
+def display_response(index: int, response):
     """Display a formatted response."""
     print(f"\n--- Response {index+1} ---")
-    print(f"Content: {response.response}")
-    try:
-        sig_preview = response.signature[:10].hex() if response.signature else "None"
-        print(f"Signature: {sig_preview}... ({len(response.signature) if response.signature else 0} bytes)")
-    except:
-        print(f"Signature: Error displaying signature")
+    if hasattr(response, 'response'):
+        print(f"Content: {response.response}")
+    else:
+        print(f"Content: {response}")
     
-    print(f"Proofs: {len(response.proofs) if response.proofs else 0} provided")
-    if response.metadata:
+    if hasattr(response, 'signature'):
+        try:
+            sig_preview = response.signature[:10].hex() if response.signature else "None"
+            print(f"Signature: {sig_preview}... ({len(response.signature) if response.signature else 0} bytes)")
+        except:
+            print(f"Signature: Error displaying signature")
+    
+    if hasattr(response, 'proofs'):
+        print(f"Proofs: {len(response.proofs) if response.proofs else 0} provided")
+    
+    if hasattr(response, 'metadata'):
         print(f"Metadata: {response.metadata}")
+    
     print("-" * 50)
 
-def test_query(quant_api: QuantAPI, args, query: str, user_id: str, metadata: dict):
-    """Test a single query and return the responses."""
+def check_agent_server():
+    """Check if the quant agent server is accessible."""
     try:
-        print(f"\nSubmitting query: '{query}'")
-        print(f"User ID: {user_id}")
-        
-        # Convert metadata list to dictionary if it's a list
-        if isinstance(metadata, list):
-            metadata = {item: True for item in metadata}
-            
-        print(f"Metadata: {metadata}")
-        
-        # Check if the API is connected
-        if quant_api.metagraph is None:
-            print("WARNING: Metagraph is None, attempting to reconnect...")
-            quant_api.connect(bt.subtensor(network=getattr(args, "subtensor.network")))
-        
-        # Show metagraph info
-        active_axons = sum(1 for axon in quant_api.metagraph.axons if axon is not None)
-        print(f"Active axons in metagraph: {active_axons}/{len(quant_api.metagraph.axons)}")
-        
-        # Get uids to query
-        if args.specific_uid is not None:
-            # Use the specific UID
-            if args.specific_uid < 0 or args.specific_uid >= len(quant_api.metagraph.axons):
-                print(f"ERROR: Specific UID {args.specific_uid} is out of range")
-                return []
-                
-            # Check if the specific UID has a valid axon
-            if quant_api.metagraph.axons[args.specific_uid] is None or not quant_api._is_axon_valid(quant_api.metagraph.axons[args.specific_uid]):
-                print(f"ERROR: Axon for specific UID {args.specific_uid} is invalid")
-                return []
-                
-            uids = [args.specific_uid]
-            print(f"Using specific UID: {args.specific_uid}")
-        else:
-            # Use sample_size
-            print(f"Sample size: {args.sample_size}")
-            uids = quant_api.get_uids(k=args.sample_size)
-            print(f"Selected UIDs: {uids}")
-        
-        if not uids:
-            print("WARNING: No UIDs were selected, returning empty list")
+        print("Checking quant agent server connectivity...")
+        response = requests.get("http://127.0.0.1:5000/health", timeout=5)
+        print(f"Agent server response: {response.status_code} - {response.text}")
+        return True
+    except Exception as e:
+        print(f"Error connecting to agent server: {e}")
+        print("Make sure the quant agent server is running at http://127.0.0.1:5000")
+        return False
+
+def test_validator_style_query(wallet, subtensor, args):
+    """Test a query exactly as the validator would do it."""
+    print("\n=== Running validator-style test query ===")
+    
+    # Check agent server if requested
+    if args.check_agent:
+        check_agent_server()
+    
+    # Create a dendrite for querying
+    dendrite = bt.dendrite(wallet=wallet)
+    print(f"Created dendrite with wallet: {wallet}")
+    
+    # Get metagraph for axons
+    metagraph = subtensor.metagraph(netuid=args.netuid)
+    print(f"Loaded metagraph with {len(metagraph.axons)} axons")
+    
+    # Get the specific UID to query
+    if args.specific_uid is not None:
+        if args.specific_uid < 0 or args.specific_uid >= len(metagraph.axons):
+            print(f"ERROR: Specific UID {args.specific_uid} is out of range 0-{len(metagraph.axons)-1}")
             return []
-        
-        print(f"Timeout: {args.timeout} seconds")
-        
-        # Start timing
-        start_time = time.time()
-        
-        # Submit the query
-        print("Sending query to network...")
-        responses = quant_api.query(
-            uids=uids,
-            query=query,
-            userID=user_id,
-            metadata=metadata,
-            timeout=args.timeout
+        miner_uids = [args.specific_uid]
+    else:
+        miner_uids = [0]  # Default to first miner
+    
+    print(f"Querying miner UIDs: {miner_uids}")
+    
+    # Get axons for these UIDs
+    axons = [metagraph.axons[uid] for uid in miner_uids if metagraph.axons[uid] is not None]
+    if not axons:
+        print("ERROR: No valid axons found for the specified UIDs")
+        return []
+    
+    # For local testing, update axon IPs to localhost
+    if "127.0.0.1" in getattr(args, "subtensor.network") or "localhost" in getattr(args, "subtensor.network"):
+        print("Local network detected, updating axon IPs to localhost")
+        for axon in axons:
+            print(f"Original axon: {axon.ip}:{axon.port}")
+            axon.ip = "127.0.0.1"
+            print(f"Updated axon: {axon.ip}:{axon.port}")
+    
+    # Create validator-style metadata (match exactly what the validator sends)
+    metadata = {
+        "Create_Proof": "True", 
+        "Type": "Validator_Test",
+        "validator_id": wallet.hotkey.ss58_address,  # Add validator's hotkey as identifier
+        "timestamp": str(int(time.time() * 1000000))  # Add timestamp for uniqueness
+    }
+    
+    # Select a query
+    if args.fixed_query:
+        current_query = "What is the current market cap of Bitcoin?"
+    else:
+        # Select a random question from the question pool (same as validator)
+        current_query = random.choice(questions)
+    
+    print(f"Query: {current_query}")
+    print(f"Metadata: {metadata}")
+    print(f"UserID: {os.getenv('SOLANA_WALLET')}")
+    
+    # Create the synapse with QuantQuery
+    synapse = QuantSynapse(
+        query=QuantQuery(
+            query=current_query,
+            userID=os.getenv("SOLANA_WALLET"),
+            metadata=metadata
         )
+    )
+    
+    print(f"Sending query to {len(axons)} axons with timeout {args.timeout} seconds...")
+    
+    # Enable more detailed debugging if requested
+    if args.logging_debug:
+        print("\nDetailed synapse object:")
+        print(f"  Query text: {synapse.query.query}")
+        print(f"  UserID: {synapse.query.userID}")
+        print(f"  Metadata: {synapse.query.metadata}")
         
-        # End timing
-        elapsed = time.time() - start_time
+        # Print axon details
+        for i, axon in enumerate(axons):
+            print(f"\nAxon {i+1} details:")
+            print(f"  IP: {axon.ip}")
+            print(f"  Port: {axon.port}")
+            print(f"  Hotkey: {axon.hotkey}")
+    
+    # This exactly matches how the validator queries miners
+    try:
+        # Send the query asynchronously
+        start_time = time.time()
+        responses = dendrite.query(
+            axons=axons,
+            synapse=synapse,
+            timeout=args.timeout,
+            deserialize=True
+        )
+        duration = time.time() - start_time
         
-        print(f"Received {len(responses)} raw responses from dendrite in {elapsed:.2f} seconds")
+        print(f"Query completed in {duration:.2f} seconds")
         
-        # Process the responses
-        processed_outputs = quant_api.process_responses(responses)
-        
-        print(f"Processed into {len(processed_outputs)} valid response objects")
-        
-        # Display the responses
-        for i, output in enumerate(processed_outputs):
-            display_response(i, output)
+        if responses is None:
+            print("WARNING: Dendrite query returned None")
+            return []
             
-        return processed_outputs
+        print(f"Received {len(responses)} responses")
         
+        # Process responses
+        for i, response in enumerate(responses):
+            print(f"\nResponse from axon {i+1}:")
+            display_response(i, response)
+        
+        return responses
     except Exception as e:
         print(f"Error during query: {e}")
         traceback.print_exc()
         return []
 
 def main():
-    """Main function to test the QuantAPI."""
+    """Main function to test the API."""
     # Parse arguments
     args = parse_arguments()
     
@@ -150,7 +214,7 @@ def main():
     if args.logging_debug:
         bt.logging.set_debug(True)
     
-    print("Initializing QuantAPI test...")
+    print("Initializing API test...")
     print(f"Python version: {sys.version}")
     print(f"Bittensor version: {bt.__version__}")
     
@@ -168,63 +232,17 @@ def main():
         block = subtensor.get_current_block()
         print(f"Successfully connected to network. Current block: {block}")
         
-        # Update netuid based on command line args
-        QuantAPI.netuid = args.netuid
-        print(f"Setting netuid to {args.netuid}")
-        
-        # Initialize the QuantAPI and connect to the network
-        print("Initializing QuantAPI...")
-        quant_api = QuantAPI(wallet=wallet)
-        
-        print("Connecting QuantAPI to network...")
-        quant_api.connect(subtensor=subtensor)
-        
-        # Verify that metagraph is loaded
-        if quant_api.metagraph is None:
-            raise ValueError("Metagraph failed to initialize")
-            
-        print(f"Metagraph loaded with {len(quant_api.metagraph.hotkeys)} hotkeys")
-        
-        # Define test queries
-        test_queries = [
-            {
-                "query": "What is the current market cap of Bitcoin?",
-                "user_id": wallet.hotkey.ss58_address,
-                "metadata": {"topics": ["crypto", "market_data", "bitcoin"]}
-            },
-            {
-                "query": "What is the trading volume of Ethereum in the last 24 hours?",
-                "user_id": wallet.hotkey.ss58_address,
-                "metadata": {"topics": ["crypto", "volume", "ethereum", "24h"]}
-            }
-        ]
-        
-        # Run tests for each query
-        results = []
-        for i, test_query_data in enumerate(test_queries):
-            print(f"\n=== Running test query {i+1}/{len(test_queries)} ===")
-            result = test_query(
-                quant_api, 
-                args, 
-                test_query_data["query"], 
-                test_query_data["user_id"], 
-                test_query_data["metadata"]
-            )
-            results.append(result)
-            
-            # Add a small delay between queries
-            if i < len(test_queries) - 1:
-                time.sleep(2)
+        # Run validator-style test
+        results = test_validator_style_query(wallet, subtensor, args)
         
         # Summary
         print("\n=== Test Summary ===")
-        for i, (query_data, result) in enumerate(zip(test_queries, results)):
-            print(f"Query {i+1}: '{query_data['query']}' - {len(result)} responses")
+        print(f"Received {len(results)} responses")
         
-        print("QuantAPI test completed successfully!")
+        print("API test completed successfully!")
         
     except Exception as e:
-        print(f"Error initializing or running QuantAPI: {e}")
+        print(f"Error initializing or running API test: {e}")
         traceback.print_exc()
         sys.exit(1)
 

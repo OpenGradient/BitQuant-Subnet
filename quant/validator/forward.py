@@ -2,14 +2,14 @@
 # Copyright © 2025 Quant by OpenGradient
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the “Software”), to deal in the Software without restriction, including without limitation
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation
 # the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
 # and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 # The above copyright notice and this permission notice shall be included in all copies or substantial portions of
 # the Software.
 
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
 # THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
@@ -36,30 +36,46 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
-    # TODO(developer): Define how the validator selects a miner to query, how often, etc.
-    # get_random_uids is an example method, but you can replace it with your own.
+    # Get random UIDs to query
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-    if not os.getenv("SOLANA_WALLET"):
-        bt.logging.error("SOLANA_WALLET environment variable is not set. Using a default value.")
+    
+    # Get wallet address for the query
+    wallet_address = os.getenv("SOLANA_WALLET")
+    if not wallet_address:
+        bt.logging.warning("SOLANA_WALLET environment variable is not set. Using a default value.")
         wallet_address = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+        # Set it in the environment for future use
+        os.environ["SOLANA_WALLET"] = wallet_address
+
+    # Create the metadata with validator ID
+    metadata = {
+        "Create_Proof": "True", 
+        "Type": "Validator_Test",
+        "validator_id": self.wallet.hotkey.ss58_address,  # Add validator's hotkey as identifier
+        "timestamp": str(int(time.time() * 1000000))  # Add timestamp for uniqueness
+    }
+
+    # Select a random question from the question pool
+    current_query = random.choice(questions)
+    
+    bt.logging.info(f"Querying miners with: {current_query}")
+    bt.logging.info(f"Using wallet address: {wallet_address}")
+    bt.logging.info(f"Query metadata: {metadata}")
 
     # The dendrite client queries the network.
     responses = await self.dendrite(
         # Send the query to selected miner axons in the network.
         axons=[self.metagraph.axons[uid] for uid in miner_uids],
         # Create a proper QuantQuery object and pass it to QuantSynapse
-
         synapse=QuantSynapse(
             query=QuantQuery(
-                query=random.choice(questions),
+                query=current_query,
                 userID=wallet_address,
-                metadata={
-                    "Create_Proof": "True", 
-                    "Type": "Validator_Test",
-                    "validator_id": self.wallet.hotkey.ss58_address  # Add validator's hotkey as identifier
-                }
+                metadata=metadata
             )
         ),
+        # Increase timeout to 60 seconds to give more time for the agent server to respond
+        timeout=60.0,
         # All responses have the deserialize function called on them before returning.
         # You are encouraged to define your own deserialization function.
         deserialize=True,
@@ -74,4 +90,8 @@ async def forward(self):
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
     self.update_scores(rewards, miner_uids)
-    time.sleep(int(os.getenv("VALIDATOR_CADENCE", 30)))
+    
+    # Wait before the next validation cycle
+    sleep_time = int(os.getenv("VALIDATOR_CADENCE", 30))
+    bt.logging.info(f"Waiting {sleep_time} seconds before next validation cycle...")
+    time.sleep(sleep_time)

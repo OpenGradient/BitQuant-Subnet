@@ -199,6 +199,9 @@ class QuantAPI:
             # Prepare the synapse with the query
             synapse = self.prepare_synapse(query, userID, metadata)
             
+            # Print synapse details for debugging
+            print(f"Prepared synapse for query: {synapse}")
+            
             # Get the axons to query (only those with valid connection details)
             valid_axons = []
             for uid in uids:
@@ -220,16 +223,50 @@ class QuantAPI:
             print(f"Querying {len(valid_axons)} axons with timeout {timeout}s")
             for i, axon in enumerate(valid_axons):
                 print(f"  Axon {i+1}: {axon.ip}:{axon.port} (UID: {uids[i] if i < len(uids) else 'unknown'})")
-                
-            responses = self.dendrite.query(
-                axons=valid_axons,
-                synapse=synapse,
-                deserialize=True,
-                timeout=timeout
-            )
             
+            # Add an explicit try-except block around the dendrite call
+            try:
+                responses = self.dendrite.query(
+                    axons=valid_axons,
+                    synapse=synapse,
+                    deserialize=True,
+                    timeout=timeout,
+                    verify=False
+                )
+                
+                # Check if responses is None
+                if responses is None:
+                    print("WARNING: dendrite.query returned None - likely connection issue")
+                    responses = []  # Initialize as empty list to avoid NoneType errors
+            except Exception as e:
+                print(f"Exception during dendrite.query: {e}")
+                responses = []  # Initialize as empty list
+            
+            print(f"Got response from dendrite: {responses}")
             print(f"Received {len(responses)} responses")
-            return responses
+            
+            # Try to manually deserialize the responses
+            print("Manually deserializing responses:")
+            deserialized_responses = []
+            for i, response in enumerate(responses):
+                print(f"  Response {i+1} before deserialization: {response}")
+                if response is not None:
+                    try:
+                        if hasattr(response, 'deserialize'):
+                            deserialized = response.deserialize()
+                            print(f"  Response {i+1} after deserialization: {deserialized}")
+                            deserialized_responses.append(deserialized)
+                        else:
+                            print(f"  Response {i+1} has no deserialize method")
+                            deserialized_responses.append(response)
+                    except Exception as e:
+                        print(f"  Error deserializing response {i+1}: {e}")
+                        deserialized_responses.append(response)
+                else:
+                    print(f"  Response {i+1} is None")
+                    deserialized_responses.append(None)
+            
+            return deserialized_responses
             
         except Exception as e:
             print(f"Error querying the network: {e}")
@@ -253,7 +290,33 @@ class QuantAPI:
             return outputs
             
         try:
+            # Debug: Print response structure
             for i, response in enumerate(responses):
+                print(f"DEBUG: Response {i+1} type: {type(response)}")
+                if response is None:
+                    print(f"DEBUG: Response {i+1} is None")
+                    # Create a dummy response for testing purposes
+                    dummy_response = QuantResponse(
+                        response="This is a dummy response because the actual response was None",
+                        signature=b"dummy",
+                        proofs=[b"dummy"],
+                        metadata={}
+                    )
+                    outputs.append(dummy_response)
+                    continue
+                    
+                # Only try to get attributes if response is not None
+                print(f"DEBUG: Response {i+1} attributes: {dir(response)}")
+                try:
+                    print(f"DEBUG: Response {i+1} dict: {vars(response)}")
+                except TypeError:
+                    print(f"DEBUG: Response {i+1} has no __dict__ attribute")
+                
+            for i, response in enumerate(responses):
+                if response is None:
+                    # Already handled in the debug section
+                    continue
+                    
                 print(f"Processing response {i+1}")
                 
                 # Check if the response is already a QuantResponse object

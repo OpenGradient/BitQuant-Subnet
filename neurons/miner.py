@@ -43,6 +43,9 @@ class Miner(BaseMinerNeuron):
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
+        # Disable validator requirement for testing
+        self.config.blacklist.force_validator_permit = False
+
         # TODO(developer): Anything specific to your use case you can do here
 
     async def forward(
@@ -62,12 +65,15 @@ class Miner(BaseMinerNeuron):
             # Check if query is properly set
             if not hasattr(synapse, 'query') or synapse.query is None:
                 bt.logging.warning("Received synapse with no query")
+                # Create a proper QuantResponse object
                 response = quant.protocol.QuantResponse(
                     response="Error: No query provided",
                     signature=b"error",
                     proofs=[b"error"],
                     metadata={}
                 )
+                # Convert to dictionary and set response
+                synapse.response = response.dict()
             else:
                 bt.logging.info(f"Processing query: {synapse.query.query}")
                 bt.logging.info(f"From userID: {synapse.query.userID}")
@@ -77,34 +83,31 @@ class Miner(BaseMinerNeuron):
                 response = subnet_query(synapse.query)
                 
                 if response is None:
+                    # Create a fallback response 
+                    bt.logging.warning("Failed to get response from agent. Creating fallback response.")
                     response = quant.protocol.QuantResponse(
-                        response="Error: Failed to communicate with quant agent",
+                        response="The server could not process your request at this time. Please try again later.",
                         signature=b"error",
                         proofs=[b"error"],
                         metadata=synapse.query.metadata or {}
                     )
+                    # Convert to dictionary and set response
+                    synapse.response = response.dict()
                 else:
                     bt.logging.info(f"Received response from quant agent: {response.response[:100]}...")
-                    # Convert to dictionary and then set the response
-                    response_dict = {
-                        "response": response.response,
-                        "signature": response.signature,
-                        "proofs": response.proofs,
-                        "metadata": response.metadata
-                    }
-                    synapse.response = response_dict
+                    # Convert QuantResponse to dictionary
+                    synapse.response = response.dict()
+                    
             return synapse
         except Exception as e:
             bt.logging.error(f"Error in forward: {e}")
-            # Provide a fallback response in case of error
-            error_response = {
-                "response": f"Error processing request: {str(e)}",
-                "signature": b"error",
-                "proofs": [b"error"],
-                "metadata": {}
-            }
-            # Set the response as a dictionary
-            synapse.response = error_response
+            # Create error response as dictionary
+            synapse.response = quant.protocol.QuantResponse(
+                response=f"Error processing request: {str(e)}",
+                signature=b"error",
+                proofs=[b"error"],
+                metadata={}
+            ).dict()
             return synapse
 
     async def blacklist(
