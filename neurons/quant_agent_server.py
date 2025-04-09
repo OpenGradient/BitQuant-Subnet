@@ -92,10 +92,10 @@ def start_quant_agent_server():
     # Get the directory of the current script
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     
-    # Path to the TwoLigma main.py script
-    quant_agent_script = os.path.join(base_dir, "quant", "TwoLigma", "main.py")
-    # TwoLigma directory (to be used as working directory)
-    quant_agent_dir = os.path.join(base_dir, "quant", "TwoLigma")
+    # Path to the OpenQuant main.py script
+    quant_agent_script = os.path.join(base_dir, "quant", "OpenQuant", "main.py")
+    # OpenQuant directory (to be used as working directory)
+    quant_agent_dir = os.path.join(base_dir, "quant", "OpenQuant")
     
     bt.logging.info(f"Starting Quant agent server from: {quant_agent_script}")
     bt.logging.info(f"Using working directory: {quant_agent_dir}")
@@ -107,7 +107,7 @@ def start_quant_agent_server():
         stderr=subprocess.PIPE,
         text=True,
         bufsize=1,
-        cwd=quant_agent_dir  # Set the working directory to the TwoLigma directory
+        cwd=quant_agent_dir  # Set the working directory to the OpenQuant directory
     )
     
     bt.logging.info(f"Quant agent server started with PID: {quant_agent_process.pid}")
