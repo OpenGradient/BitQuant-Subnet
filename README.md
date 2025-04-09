@@ -13,7 +13,7 @@
 
 ---
 - [Introduction](#introduction)
-- [OpenQuant Framework](#openquant-framework)
+- [OpenQuant](#openquant)
 - [Installation](#installation)
 - [Architecture](#architecture)
 - [Development](#development)
