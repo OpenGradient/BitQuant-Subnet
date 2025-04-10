@@ -18,7 +18,7 @@ Before proceeding further, make sure that you have installed Bittensor. See the 
 
 After installing `bittensor`, proceed as below:
 
-## 1. Install Bittensor subnet quant
+## 1. Install Quant-Subnet
 
 **NOTE: Skip this step if** you already did this during local testing and development.
 
