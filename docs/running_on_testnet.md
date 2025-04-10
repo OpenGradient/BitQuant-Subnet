@@ -25,16 +25,16 @@ After installing `bittensor`, proceed as below:
 `cd` into your project directory and clone the bittensor-subnet-quant repo:
 
 ```bash
-git clone https://github.com/opentensor/bittensor-subnet-quant.git 
+git clone https://github.com/OpenGradient/Quant-Subnet
 ```
 
-Next, `cd` into bittensor-subnet-quant repo directory:
+Next, `cd` into Quant-Subnet repo directory:
 
 ```bash
-cd bittensor-subnet-quant  
+cd Quant-Subnet
 ```
 
-Install the bittensor-subnet-quant package:
+Install the Quant-Subnet package:
 
 ```bash
 python -m pip install -e . 
