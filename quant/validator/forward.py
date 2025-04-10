@@ -39,7 +39,9 @@ async def forward(self):
     # TODO(developer): Define how the validator selects a miner to query, how often, etc.
     # get_random_uids is an example method, but you can replace it with your own.
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-    if not os.getenv("SOLANA_WALLET"):
+    
+    wallet_address = os.getenv("SOLANA_WALLET")
+    if not wallet_address:
         bt.logging.error("SOLANA_WALLET environment variable is not set. Using a default value.")
         wallet_address = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
 
