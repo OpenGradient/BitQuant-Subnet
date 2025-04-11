@@ -18,7 +18,7 @@ import numpy as np
 from typing import List
 import bittensor as bt
 from quant.protocol import QuantResponse, QuantQuery
-from quant.OpenQuant.api.simple_client import subnet_evaluation
+from quant.OpenQuant.subnet.subnet_methods import subnet_evaluation
 
 def reward(query: QuantQuery, response: QuantResponse) -> float:
     """
