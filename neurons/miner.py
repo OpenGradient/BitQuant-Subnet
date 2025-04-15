@@ -22,8 +22,8 @@ import bittensor as bt
 # Bittensor Miner Quant:
 import quant
 
-# Import the subnet_query function from OpenQuant client
-from quant.OpenQuant.subnet.subnet_methods import subnet_query
+# Import the subnet_query function from BitQuant client
+from quant.BitQuant.subnet.subnet_methods import subnet_query
 
 # import base miner class which takes care of most of the boilerplate
 from quant.base.miner import BaseMinerNeuron
@@ -49,7 +49,7 @@ class Miner(BaseMinerNeuron):
         self, synapse: quant.protocol.QuantSynapse
     ) -> quant.protocol.QuantSynapse:
         """
-        Processes the incoming 'QuantSynapse' request by forwarding it to the OpenQuant subnet
+        Processes the incoming 'QuantSynapse' request by forwarding it to the BitQuant subnet
         using the subnet_query function.
 
         Args:

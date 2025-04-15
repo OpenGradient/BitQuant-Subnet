@@ -1,6 +1,6 @@
 <div align="center">
 
-# **OpenQuant Subnet by OpenGradient** <!-- omit in toc -->
+# **BitQuant Subnet by OpenGradient** <!-- omit in toc -->
 [![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/bittensor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
 
@@ -13,7 +13,7 @@
 
 ---
 - [Introduction](#introduction)
-- [OpenQuant](#openquant)
+- [BitQuant](#BitQuant)
 - [Installation](#installation)
 - [Architecture](#architecture)
 - [Development](#development)
@@ -27,9 +27,9 @@ OpenGradient's Quant Subnet implements a decentralized AI framework for quantita
 - Risk assessment and trend analysis
 - Quantitative strategy evaluation
 
-## OpenQuant
+## BitQuant
 
-The subnet is powered by OpenQuant, OpenGradient's AI agent framework for quantitative analysis that provides:
+The subnet is powered by BitQuant, OpenGradient's AI agent framework for quantitative analysis that provides:
 - Real-time market data processing and insights
 - Portfolio analysis and optimization
 - Price trend and pattern analysis
@@ -50,7 +50,7 @@ The OG Quant subnet implements a decentralized quantitative analysis framework t
 
 **Miners**
 - Process incoming requests through blacklist and priority checks
-- Forward validated queries to OpenQuant for processing
+- Forward validated queries to BitQuant for processing
 - Add response metadata and handle error cases
 
 **Validators**
