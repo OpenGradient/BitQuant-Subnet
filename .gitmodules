@@ -1,8 +1,8 @@
-[submodule "quant/quant/OpenQuant"]
-	path = quant/quant/OpenQuant
-	url = https://github.com/OpenGradient/OpenQuant.git
+[submodule "quant/quant/BitQuant"]
+	path = quant/quant/BitQuant
+	url = https://github.com/OpenGradient/BitQuant.git
 	branch = localnet
-[submodule "quant/OpenQuant"]
-	path = quant/OpenQuant
-	url = https://github.com/OpenGradient/OpenQuant.git
+[submodule "quant/BitQuant"]
+	path = quant/BitQuant
+	url = https://github.com/OpenGradient/BitQuant.git
 	branch = localnet
