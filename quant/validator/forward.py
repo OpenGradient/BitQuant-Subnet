@@ -45,6 +45,16 @@ async def forward(self):
         bt.logging.error("SOLANA_WALLET environment variable is not set. Using a default value.")
         wallet_address = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
 
+    query = QuantQuery(
+        query=random.choice(questions),
+        userID=wallet_address,
+        metadata={
+            "Create_Proof": "True", 
+            "Type": "Validator_Test",
+            "validator_id": self.wallet.hotkey.ss58_address
+        }
+    )
+
     # The dendrite client queries the network.
     responses = await self.dendrite(
         # Send the query to selected miner axons in the network.
@@ -52,15 +62,7 @@ async def forward(self):
         # Create a proper QuantQuery object and pass it to QuantSynapse
 
         synapse=QuantSynapse(
-            query=QuantQuery(
-                query=random.choice(questions),
-                userID=wallet_address,
-                metadata={
-                    "Create_Proof": "True", 
-                    "Type": "Validator_Test",
-                    "validator_id": self.wallet.hotkey.ss58_address  # Add validator's hotkey as identifier
-                }
-            )
+            query=query
         ),
         # All responses have the deserialize function called on them before returning.
         # You are encouraged to define your own deserialization function.
@@ -71,7 +73,7 @@ async def forward(self):
     bt.logging.info(f"Received responses: {responses}")
 
     # Adjust the scores based on responses from miners.
-    rewards = get_rewards(self, query=self.step, responses=responses)
+    rewards = get_rewards(self, query=query, responses=responses)
 
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
