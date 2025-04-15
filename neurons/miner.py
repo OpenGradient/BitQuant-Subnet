@@ -73,7 +73,8 @@ class Miner(BaseMinerNeuron):
                 bt.logging.info(f"From userID: {synapse.query.userID}")
                 bt.logging.info(f"Metadata: {synapse.query.metadata}")
                 
-                # Forward the query to the quant agent using subnet_query
+                # TODO(developer): Developers deploying miner nodes can add their own custom mining logic here.
+                # Replace or extend this call to 'subnet_query' with your own implementation as needed.
                 response = subnet_query(synapse.query)
                 
                 if response is None:
