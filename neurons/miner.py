@@ -23,7 +23,7 @@ import bittensor as bt
 import quant
 
 # Import the subnet_query function from OpenQuant client
-from quant.OpenQuant.api.simple_client import subnet_query
+from quant.OpenQuant.subnet.subnet_methods import subnet_query
 
 # import base miner class which takes care of most of the boilerplate
 from quant.base.miner import BaseMinerNeuron
@@ -73,7 +73,8 @@ class Miner(BaseMinerNeuron):
                 bt.logging.info(f"From userID: {synapse.query.userID}")
                 bt.logging.info(f"Metadata: {synapse.query.metadata}")
                 
-                # Forward the query to the quant agent using subnet_query
+                # TODO(developer): Developers deploying miner nodes can add their own custom mining logic here.
+                # Replace or extend this call to 'subnet_query' with your own implementation as needed.
                 response = subnet_query(synapse.query)
                 
                 if response is None:

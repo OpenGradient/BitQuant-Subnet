@@ -18,7 +18,7 @@ import numpy as np
 from typing import List
 import bittensor as bt
 from quant.protocol import QuantResponse, QuantQuery
-from quant.OpenQuant.api.simple_client import subnet_evaluation
+from quant.OpenQuant.subnet.subnet_methods import subnet_evaluation
 
 def reward(query: QuantQuery, response: QuantResponse) -> float:
     """
@@ -34,7 +34,8 @@ def reward(query: QuantQuery, response: QuantResponse) -> float:
     """
     bt.logging.info(f"Evaluating response for query: {query} and response: {response}")
     
-    # Call subnet_evaluation to get the reward score
+    # TODO(developer): Developers can deploy their own evaluation function here.
+    # Replace 'subnet_evaluation' with your custom evaluation logic as needed.
     reward_score = subnet_evaluation(query, response)
     
     return reward_score 
