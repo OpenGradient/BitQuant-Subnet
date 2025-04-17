@@ -21,7 +21,7 @@
 ---
 ## Introduction
 
-OpenGradient's Quant Subnet implements a decentralized AI framework for quantitative DeFi analysis on the Bittensor network. Through natural language interfaces, it enables:
+OpenGradient's BitQuant Subnet implements a decentralized AI framework for quantitative DeFi analysis on the Bittensor network. Through natural language interfaces, it enables:
 - ML-powered market analytics
 - Portfolio analysis and optimization
 - Risk assessment and trend analysis
@@ -38,7 +38,7 @@ The subnet is powered by BitQuant, OpenGradient's AI agent framework for quantit
 
 ## Architecture
 
-The OG Quant subnet implements a decentralized quantitative analysis framework through three main components:
+The OG BitQuant subnet implements a decentralized quantitative analysis framework through three main components:
 
 ### Protocol Layer
 - Defines the `QuantSynapse` 
@@ -75,7 +75,7 @@ For detailed setup instructions, see:
 This repository is licensed under the MIT License.
 ```text
 # The MIT License (MIT)
-# Copyright © 2025 Quant by OpenGradient
+# Copyright © 2025 BitQuant Subnet by OpenGradient
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
