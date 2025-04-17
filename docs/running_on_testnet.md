@@ -18,23 +18,23 @@ Before proceeding further, make sure that you have installed Bittensor. See the 
 
 After installing `bittensor`, proceed as below:
 
-## 1. Install Quant-Subnet
+## 1. Install BitQuant-Subnet
 
 **NOTE: Skip this step if** you already did this during local testing and development.
 
 `cd` into your project directory and clone the bittensor-subnet-quant repo:
 
 ```bash
-git clone https://github.com/OpenGradient/Quant-Subnet
+git clone https://github.com/OpenGradient/BitQuant-Subnet
 ```
 
-Next, `cd` into Quant-Subnet repo directory:
+Next, `cd` into BitQuant-Subnet repo directory:
 
 ```bash
-cd Quant-Subnet
+cd BitQuant-Subnet
 ```
 
-Install the Quant-Subnet package:
+Install the BitQuant-Subnet package:
 
 ```bash
 python -m pip install -e . 
