@@ -64,6 +64,11 @@ BitQuant is an agentic framework for digital asset analytics and DeFi strategy, 
 
 > **Try it live:** [bitquant.io](https://bitquant.io)
 
+![BitQuant UI](https://github.com/OpenGradient/public_images/blob/main/bitquant-ui.png?raw=true)
+![BitQuant Question Example](https://github.com/OpenGradient/public_images/blob/main/bitquant-1.png?raw=true)
+![BitQuant Question Example 2](https://github.com/OpenGradient/public_images/blob/main/bitquant-2.png?raw=true)
+
+
 ## Architecture
 
 The OG BitQuant subnet implements a decentralized quantitative analysis framework through three main components:
