@@ -13,7 +13,7 @@
 
 ---
 - [Introduction](#introduction)
-- [BitQuant](#BitQuant)
+- [BitQuant](#bitquant)
 - [Installation](#installation)
 - [Architecture](#architecture)
 - [Development](#development)
@@ -27,7 +27,11 @@ OpenGradient's BitQuant Subnet implements a decentralized AI framework for quant
 - Risk assessment and trend analysis
 - Quantitative strategy evaluation
 
-## BitQuant
+### High-Level Goals
+- Democratize access to advanced quantitative analytics for DeFi and crypto markets
+- Incentivize high-quality AI agents to provide real-time, actionable insights
+- Enable composable, on-chain quantitative strategies and risk metrics
+- Foster a robust ecosystem for decentralized, AI-powered financial intelligence
 
 The subnet is powered by BitQuant, OpenGradient's AI agent framework for quantitative analysis that provides:
 - Real-time market data processing and insights
@@ -35,6 +39,30 @@ The subnet is powered by BitQuant, OpenGradient's AI agent framework for quantit
 - Price trend and pattern analysis
 - Token metrics and risk evaluation
 - Risk-reward assessment
+
+## BitQuant
+BitQuant is an agentic framework for digital asset analytics and DeFi strategy, enabling users to analyze tokens, DeFi pools, and portfolio risk with advanced on-chain and off-chain data.
+
+**Agent Capabilities:**
+- Pool Discovery
+- Token Search
+- TVL Analytics
+- Price Trend Analysis
+- Drawdown Calculation
+- Portfolio Volatility
+- Wallet Analytics
+- Trending Tokens
+- Token Risk Evaluation
+- Top Holders Lookup
+
+**Example Queries:**
+- "Find all Solana pools I can invest in with my wallet’s tokens and show their historical TVL."
+- "Analyze the price trend and calculate the max drawdown for SOL over the last 90 days."
+- "Evaluate my wallet’s portfolio volatility and identify the riskiest token holding."
+- "Search for trending tokens across X chain and display their top holders."
+- "Compare historical global TVL and chain-specific TVL for Ethereum and Solana."
+
+> **Try it live:** [bitquant.io](https://bitquant.io)
 
 ## Architecture
 
