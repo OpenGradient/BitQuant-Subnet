@@ -14,6 +14,8 @@
 ---
 - [Introduction](#introduction)
 - [BitQuant](#BitQuant)
+- [Types of Queries & Responses](#types-of-queries--responses)
+- [BitQuant Consumer App](#bitquant-consumer-app)
 - [Installation](#installation)
 - [Architecture](#architecture)
 - [Development](#development)
@@ -27,14 +29,46 @@ OpenGradient's BitQuant Subnet implements a decentralized AI framework for quant
 - Risk assessment and trend analysis
 - Quantitative strategy evaluation
 
+### High-Level Goals
+- Democratize access to advanced quantitative analytics for DeFi and crypto markets
+- Incentivize high-quality AI agents to provide real-time, actionable insights
+- Enable composable, on-chain quantitative strategies and risk metrics
+- Foster a robust ecosystem for decentralized, AI-powered financial intelligence
+
 ## BitQuant
 
-The subnet is powered by BitQuant, OpenGradient's AI agent framework for quantitative analysis that provides:
-- Real-time market data processing and insights
-- Portfolio analysis and optimization
-- Price trend and pattern analysis
-- Token metrics and risk evaluation
-- Risk-reward assessment
+BitQuant is an agentic framework for digital asset analytics and DeFi strategy, enabling users to analyze tokens, DeFi pools, and portfolio risk with advanced on-chain and off-chain data.
+
+**Agent Capabilities:**
+- Pool Discovery
+- Token Search
+- TVL Analytics
+- Price Trend Analysis
+- Drawdown Calculation
+- Portfolio Volatility
+- Wallet Analytics
+- Trending Tokens
+- Token Risk Evaluation
+- Top Holders Lookup
+
+## Types of Queries & Responses
+
+**Example Queries:**
+- "Find all Solana pools I can invest in with my wallet’s tokens and show their historical TVL."
+- "Analyze the price trend and calculate the max drawdown for SOL over the last 90 days."
+- "Evaluate my wallet’s portfolio volatility and identify the riskiest token holding."
+- "Search for trending tokens across X chain and display their top holders."
+- "Compare historical global TVL and chain-specific TVL for Ethereum and Solana."
+
+## BitQuant 
+
+Experience BitQuant's capabilities in the [BitQuant Consumer Application](https://bitquant.ai) — a modern web interface for:
+- Interactive natural language queries
+- Real-time analytics dashboards
+- Visual portfolio and risk analysis
+- Strategy backtesting and simulation
+
+> **Try it live:** [bitquant.ai](https://bitquant.ai)
 
 ## Architecture
 
