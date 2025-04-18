@@ -14,10 +14,10 @@
 ---
 - [Introduction](#introduction)
 - [BitQuant](#bitquant)
-- [Installation](#installation)
 - [Architecture](#architecture)
-- [Development](#development)
+- [Installation](#installation)
 - [License](#license)
+- [Appendix](#appendix)
 ---
 ## Introduction
 
@@ -63,11 +63,6 @@ BitQuant is an agentic framework for digital asset analytics and DeFi strategy, 
 - "Compare historical global TVL and chain-specific TVL for Ethereum and Solana."
 
 > **Try it live:** [bitquant.io](https://bitquant.io)
-
-![BitQuant UI](https://github.com/OpenGradient/public_images/blob/main/bitquant-ui.png?raw=true)
-![BitQuant Question Example](https://github.com/OpenGradient/public_images/blob/main/bitquant-1.png?raw=true)
-![BitQuant Question Example 2](https://github.com/OpenGradient/public_images/blob/main/bitquant-2.png?raw=true)
-
 
 ## Architecture
 
@@ -124,3 +119,11 @@ This repository is licensed under the MIT License.
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 ```
+
+## Appendix
+#### BitQuant Example Questions
+
+![BitQuant UI](https://github.com/OpenGradient/public_images/blob/main/bitquant-ui.png?raw=true)
+![BitQuant Question Example 3](https://raw.githubusercontent.com/OpenGradient/public_images/fbd27e6119f3157f5682afe2217054504c5abe8d/bitquant-3.png)
+![BitQuant Question Example](https://github.com/OpenGradient/public_images/blob/main/bitquant-1.png?raw=true)
+![BitQuant Question Example 2](https://github.com/OpenGradient/public_images/blob/main/bitquant-2.png?raw=true)
