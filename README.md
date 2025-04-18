@@ -36,7 +36,6 @@ OpenGradient's BitQuant Subnet implements a decentralized AI framework for quant
 - Foster a robust ecosystem for decentralized, AI-powered financial intelligence
 
 ## BitQuant
-
 BitQuant is an agentic framework for digital asset analytics and DeFi strategy, enabling users to analyze tokens, DeFi pools, and portfolio risk with advanced on-chain and off-chain data.
 
 **Agent Capabilities:**
@@ -51,8 +50,6 @@ BitQuant is an agentic framework for digital asset analytics and DeFi strategy, 
 - Token Risk Evaluation
 - Top Holders Lookup
 
-## Types of Queries & Responses
-
 **Example Queries:**
 - "Find all Solana pools I can invest in with my wallet’s tokens and show their historical TVL."
 - "Analyze the price trend and calculate the max drawdown for SOL over the last 90 days."
@@ -60,15 +57,7 @@ BitQuant is an agentic framework for digital asset analytics and DeFi strategy, 
 - "Search for trending tokens across X chain and display their top holders."
 - "Compare historical global TVL and chain-specific TVL for Ethereum and Solana."
 
-## BitQuant 
-
-Experience BitQuant's capabilities in the [BitQuant Consumer Application](https://bitquant.ai) — a modern web interface for:
-- Interactive natural language queries
-- Real-time analytics dashboards
-- Visual portfolio and risk analysis
-- Strategy backtesting and simulation
-
-> **Try it live:** [bitquant.ai](https://bitquant.ai)
+> **Try it live:** [bitquant.io](https://bitquant.io)
 
 ## Architecture
 
