@@ -44,6 +44,9 @@ def reward(query: QuantQuery, response: QuantResponse) -> float:
         return 0.0
 
     bt.logging.info(f"Evaluating response for query: {query} and response: {response}")
+    
+    # TODO(developer): Developers can deploy their own evaluation function here.
+    # Replace 'subnet_evaluation' with your custom evaluation logic as needed.
     reward_score = subnet_evaluation(query, response)
     return reward_score
 
