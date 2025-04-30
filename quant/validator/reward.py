@@ -19,6 +19,11 @@ from typing import List
 import bittensor as bt
 from quant.protocol import QuantResponse, QuantQuery
 from quant.BitQuant.subnet.subnet_methods import subnet_evaluation
+from quant.validator.attestation.attestation import retrieve_remote_attestation, validate_attestation
+from quant.validator.attestation.periodic import periodic_attestation_check
+
+# Start periodic attestation check
+periodic_attestation_check()
 
 def reward(query: QuantQuery, response: QuantResponse) -> float:
     """
@@ -32,13 +37,21 @@ def reward(query: QuantQuery, response: QuantResponse) -> float:
     Returns:
     - float: The reward value for the miner.
     """
+    try:
+        attestation = retrieve_remote_attestation()
+        if not validate_attestation(attestation):
+            bt.logging.warning("TEE GPU attestation failed. Reward set to 0.")
+            return 0.0
+    except Exception as e:
+        bt.logging.error(f"TEE attestation error: {e}. Reward set to 0.")
+        return 0.0
+
     bt.logging.info(f"Evaluating response for query: {query} and response: {response}")
-    
+
     # TODO(developer): Developers can deploy their own evaluation function here.
     # Replace 'subnet_evaluation' with your custom evaluation logic as needed.
     reward_score = subnet_evaluation(query, response)
-    
-    return reward_score 
+    return reward_score
 
 
 def get_rewards(
@@ -56,6 +69,4 @@ def get_rewards(
     Returns:
     - np.ndarray: An array of reward values for each response based on the given query.
     """
-    # Get all the reward results by iteratively calling your reward() function.
-
     return np.array([reward(query, response) for response in responses])
