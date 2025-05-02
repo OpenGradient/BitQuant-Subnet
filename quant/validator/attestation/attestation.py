@@ -4,6 +4,7 @@ import re
 import json
 import os
 import time
+import bittensor as bt
 
 GPU_ATTEST_URL = "http://34.96.84.217:5001/attest/gpu"
 GPU_ATTEST_HEADERS = {"Content-Type": "application/json"}
@@ -16,8 +17,6 @@ GOLDEN_MEASUREMENTS = load_golden_measurements()
 SUCCESS_STRINGS = [
     "Attestation report signature verification successful.",
     "Attestation report verification successful.",
-    "driver RIM verification successful.",
-    "vbios RIM verification successful.",
     "The runtime measurements are matching with the golden measurements.",
     "GPU is in expected state.",
     "GPU Attestation is Successful."
@@ -63,10 +62,12 @@ def parse_gpu_attestation(raw_attestation_doc: str) -> Dict:
 def validate_attestation(attestation: Dict) -> bool:
     # Compare measurements to golden
     if attestation["measurements"] != GOLDEN_MEASUREMENTS:
-        print("Measurement mismatch:")
-        print("Expected:", GOLDEN_MEASUREMENTS)
-        print("Got:", attestation["measurements"])
+        bt.logging.warning("[Attestation] Measurement mismatch detected.")
+        bt.logging.warning(f"[Attestation] Expected measurements: {GOLDEN_MEASUREMENTS}")
+        bt.logging.warning(f"[Attestation] Got measurements: {attestation['measurements']}")
         return False
     if not attestation["overall_success"]:
+        failed_checks = [k for k, v in attestation.get("checks", {}).items() if not v]
+        bt.logging.warning(f"[Attestation] overall_success is False. Failed checks: {failed_checks}")
         return False
     return True
