@@ -31,13 +31,13 @@ After installing `bittensor`, proceed as below:
 In your project directory:
 
 ```bash
-git clone https://github.com/opentensor/bittensor-subnet-quant.git 
+git clone https://github.com/OpenGradient/BitQuant-Subnet.git 
 ```
 
-Next, `cd` into `bittensor-subnet-quant` repo directory:
+Next, `cd` into `BitQuant-Subnet` repo directory:
 
 ```bash
-cd bittensor-subnet-quant
+cd BitQuant-Subnet
 ```
 
 Install the Bittensor subnet quant package:
