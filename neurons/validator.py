@@ -64,8 +64,9 @@ class Validator(BaseValidatorNeuron):
 if __name__ == "__main__":
     try:
         # Set up and start the Quant agent server using the shared module
-        quant_agent_server_process = quant_agent_server.setup_quant_agent_server()
-        
+        # quant_agent_server_process = quant_agent_server.setup_quant_agent_server()
+        quant_agent_server_process = None 
+
         # Log whether we're using an existing server or started a new one
         if quant_agent_server_process is None:
             bt.logging.info("Using an existing Quant agent server or continuing without one.")
