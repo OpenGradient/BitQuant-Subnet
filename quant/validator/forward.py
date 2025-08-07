@@ -43,7 +43,7 @@ async def forward(self):
     wallet_address = os.getenv("SOLANA_WALLET")
     if not wallet_address:
         bt.logging.error("SOLANA_WALLET environment variable is not set. Using a default value.")
-        wallet_address = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+        wallet_address = "5HHSqMvTCvgtzdqFb5BbtYjB8cEiJjf8UZ6p5rQczagL"
 
     query = QuantQuery(
         query=random.choice(questions),

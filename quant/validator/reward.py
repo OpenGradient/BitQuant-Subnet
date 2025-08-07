@@ -36,6 +36,9 @@ def bitquant_evaluate(
 ) -> Optional[Dict[str, Any]]:
     """
     Helper function to evaluate a miner's response using the BitQuant Agent API.
+    The current implementation uses the production BitQuant Agent deployment 
+    (see https://github.com/OpenGradient/BitQuant), but we welcome validators to design 
+    their own subnet query evaluation mechanism.
     
     Args:
         query (QuantQuery): The query that was sent to the miner
@@ -165,6 +168,9 @@ def reward(query: QuantQuery, response: QuantResponse) -> float:
     Returns:
     - float: The reward value for the miner.
     """
+
+    """
+    TEE remote attestation check -> no hard TEE attestation check requirement for now
     try:
         attestation = retrieve_remote_attestation()
         if not validate_attestation(attestation):
@@ -173,7 +179,7 @@ def reward(query: QuantQuery, response: QuantResponse) -> float:
     except Exception as e:
         bt.logging.error(f"TEE attestation error: {e}. Reward set to 0.")
         return 0.0
-
+    """
     bt.logging.info(f"Evaluating response for query: {query} and response: {response}")
 
     # TODO(developer): Developers can deploy their own evaluation function here.
