@@ -4,7 +4,7 @@
 	branch = main
 [submodule "quant/BitQuant"]
 	path = quant/BitQuant
-	url = https://github.com/OpenGradient/BitQuant.git
+	url = https://github.com/OpenGradient/BitQuant
 	branch = main
 [submodule "BitQuant"]
 	branch = main
