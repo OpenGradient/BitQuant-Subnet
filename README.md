@@ -81,6 +81,8 @@ cp .env.example .env
 python neurons/miner.py --netuid 15 --subtensor.network finney --wallet.name miner --wallet.hotkey default --logging.debug
 ```
 
+**Note**: Running a miner node requires substantially higher compute requirements due to the local running of the BitQuant agent. Setup instructions can be found https://github.com/OpenGradient/BitQuant
+
 ### Troubleshooting FAQ
 
 **Note**: This repository requires Python3.13 and Python3.13 tools
