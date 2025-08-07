@@ -40,7 +40,7 @@ SUBNET_LINKS = [
     },
     {
         "name": "sn15",
-        "url": "https://github.com/blockchain-insights/blockchain-data-subnet/",
+        "url": "https://github.com/opengradient/bitquant-subnet/",
     },
     {"name": "sn16", "url": "https://github.com/eseckft/BitAds.ai/"},
     {"name": "sn17", "url": "https://github.com/404-Repo/three-gen-subnet/"},
