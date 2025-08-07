@@ -23,7 +23,7 @@ import bittensor as bt
 import quant
 
 # Import the subnet_query function from BitQuant client
-from quant.BitQuant.subnet.subnet_methods import subnet_query
+# from quant.BitQuant.subnet.subnet_methods import subnet_query
 
 # import base miner class which takes care of most of the boilerplate
 from quant.base.miner import BaseMinerNeuron

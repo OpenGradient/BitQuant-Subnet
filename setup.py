@@ -61,18 +61,18 @@ with codecs.open(
     version_string = version_match.group(1)
 
 setup(
-    name="bittensor_subnet_quant",  # TODO(developer): Change this value to your module subnet name.
+    name="bittensor_subnet_quant",
     version=version_string,
-    description="bittensor_subnet_quant",  # TODO(developer): Change this value to your module subnet description.
+    description="Bittensor Subnet for a decentralized quantitative agent network",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/opentensor/bittensor-subnet-quant",  # TODO(developer): Change this url to your module subnet github url.
-    author="bittensor.com",  # TODO(developer): Change this value to your module subnet author name.
+    url="https://github.com/opentensor/bittensor-subnet-quant",
+    author="opengradient.ai",
     packages=find_packages(),
     include_package_data=True,
-    author_email="",  # TODO(developer): Change this value to your module subnet author email.
+    author_email="team@opengradient.ai",
     license="MIT",
-    python_requires=">=3.8",
+    python_requires=">=3.13",
     install_requires=requirements,
     classifiers=[
         "Development Status :: 3 - Alpha",
