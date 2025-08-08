@@ -182,6 +182,16 @@ def reward(query: QuantQuery, response: QuantResponse) -> float:
     """
     bt.logging.info(f"Evaluating response for query: {query} and response: {response}")
 
+    # Validate the response before evaluation
+    if response is None:
+        bt.logging.warning("Response is None, returning reward score of 0.0")
+        return 0.0
+    
+    # Check if response has valid response content
+    if not hasattr(response, 'response') or not response.response:
+        bt.logging.warning("Response does not contain valid response content, returning reward score of 0.0")
+        return 0.0
+
     # TODO(developer): Developers can deploy their own evaluation function here.
     # Replace 'subnet_evaluation' with your custom evaluation logic as needed.
     reward_score = subnet_evaluation(query, response)
