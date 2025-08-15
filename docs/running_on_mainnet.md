@@ -24,27 +24,58 @@ After installing `bittensor`, proceed as below:
 
 ## Steps
 
-## 1. Install your subnet quant
+## 1. Install BitQuant-Subnet
 
 **NOTE: Skip this step if** you already did this during local testing and development.
 
-In your project directory:
+### Validator Setup
 
 ```bash
-git clone https://github.com/OpenGradient/BitQuant-Subnet.git 
-```
+# Install Python3.13 and Python3.13 tools on your OS
+sudo apt update
+sudo apt install python3.13 python3.13-venv python3.13-dev pkg-config
 
-Next, `cd` into `BitQuant-Subnet` repo directory:
-
-```bash
+# Clone BitQuant-Subnet Repository and checkout Validator Branch
+git clone https://github.com/OpenGradient/BitQuant-Subnet
 cd BitQuant-Subnet
+git checkout Validator
+
+# Optional: Create Python Virtual Environment (Best Practice)
+python3.13 -m venv venv
+source venv/bin/activate
+
+# Install Requirements
+pip install -r requirements.txt
+pip install -e .
+
+# Set up customized environment variables in .env, or fall back to defaults
+cp .env.example .env
 ```
 
-Install the Bittensor subnet quant package:
+### Miner Setup
 
 ```bash
-python -m pip install -e . # Install your subnet quant package
+# Install Python3.13 and Python3.13 tools on your OS
+sudo apt update
+sudo apt install python3.13 python3.13-venv python3.13-dev pkg-config
+
+# Clone BitQuant-Subnet Repository and BitQuant submodule
+git clone --branch Miner --recursive https://github.com/OpenGradient/BitQuant-Subnet
+cd BitQuant-Subnet
+
+# Optional: Create Python Virtual Environment (Best Practice)
+python3.13 -m venv venv
+source venv/bin/activate
+
+# Install Requirements
+pip install -r requirements.txt
+pip install -e .
+
+# Setup all the environment variables in .env
+cp .env.example .env
 ```
+
+**Note**: Running a miner node requires substantially higher compute requirements due to the local running of the BitQuant agent. Setup instructions can be found https://github.com/OpenGradient/BitQuant
 
 ## 2. Create wallets 
 
@@ -87,43 +118,7 @@ and
 btcli wallet new_hotkey --wallet.name validator --wallet.hotkey default
 ```
 
-## 3. Getting the price of subnet creation
-
-Creating subnets on mainnet is competitive. The cost is determined by the rate at which new subnets are being registered onto the Bittensor blockchain. 
-
-By default you must have at least 100 TAO on your owner wallet to create a subnet. However, the exact amount will fluctuate based on demand. The below code shows how to get the current price of creating a subnet.
-
-```bash
-btcli subnet lock_cost 
-```
-
-The above command will show:
-
-```bash
->> Subnet lock cost: τ100.000000000
-```
-
-## 4. Purchasing a slot
-
-Using your TAO balance, you can register your subnet to the mainchain. This will create a new subnet on the mainchain and give you the owner permissions to it. The below command shows how to purchase a slot. 
-
-**NOTE**: Slots cost TAO to lock. You will get this TAO back when the subnet is deregistered.
-
-```bash
-btcli subnet create  
-```
-
-Enter the owner wallet name. This gives permissions to the coldkey.
-
-```bash
->> Enter wallet name (default): owner # Enter your owner wallet name
->> Enter password to unlock key: # Enter your wallet password.
->> Register subnet? [y/n]: <y/n> # Select yes (y)
->> ⠇ 📡 Registering subnet...
-✅ Registered subnetwork with netuid: 1 # Your subnet netuid will show here, save this for later.
-```
-
-## 5. (Optional) Register keys 
+## 3. (Optional) Register keys 
 
 **NOTE**: While this is not enforced, we recommend subnet owners to run a subnet validator and a subnet miner on the subnet to demonstrate proper use to the community.
 
@@ -163,7 +158,7 @@ Follow the below prompts:
 >> ✅ Registered
 ```
 
-## 6. Check that your keys have been registered
+## 4. Check that your keys have been registered
 
 Check that your subnet validator key has been registered:
 
@@ -197,7 +192,7 @@ miner    default  1      True   0.00000  0.00000  0.00000    0.00000    0.00000 
                                                                           Wallet balance: τ0.0   
 ```
 
-## 7. Run subnet miner and subnet validator
+## 5. Run subnet miner and subnet validator
 
 Run the subnet miner:
 
@@ -223,7 +218,7 @@ You will see the below terminal output:
 >> 2023-08-08 16:58:11.223 |       INFO       | Running validator for subnet: 1 on network: wss://entrypoint-finney.opentensor.ai:443 with config: ...
 ```
 
-## 8. Get emissions flowing
+## 6. Get emissions flowing
 
 Register to the root subnet using the `btcli`:
 
@@ -237,7 +232,7 @@ Then set your weights for the subnet:
 btcli root weights 
 ```
 
-## 9. Stopping your nodes
+## 7. Stopping your nodes
 
 To stop your nodes, press CTRL + C in the terminal where the nodes are running.
 
