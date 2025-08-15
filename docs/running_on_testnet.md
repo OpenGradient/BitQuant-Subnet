@@ -22,23 +22,54 @@ After installing `bittensor`, proceed as below:
 
 **NOTE: Skip this step if** you already did this during local testing and development.
 
-`cd` into your project directory and clone the bittensor-subnet-quant repo:
+### Validator Setup
 
 ```bash
+# Install Python3.13 and Python3.13 tools on your OS
+sudo apt update
+sudo apt install python3.13 python3.13-venv python3.13-dev pkg-config
+
+# Clone BitQuant-Subnet Repository and checkout Validator Branch
 git clone https://github.com/OpenGradient/BitQuant-Subnet
-```
-
-Next, `cd` into BitQuant-Subnet repo directory:
-
-```bash
 cd BitQuant-Subnet
+git checkout Validator
+
+# Optional: Create Python Virtual Environment (Best Practice)
+python3.13 -m venv venv
+source venv/bin/activate
+
+# Install Requirements
+pip install -r requirements.txt
+pip install -e .
+
+# Set up customized environment variables in .env, or fall back to defaults
+cp .env.example .env
 ```
 
-Install the BitQuant-Subnet package:
+### Miner Setup
 
 ```bash
-python -m pip install -e . 
+# Install Python3.13 and Python3.13 tools on your OS
+sudo apt update
+sudo apt install python3.13 python3.13-venv python3.13-dev pkg-config
+
+# Clone BitQuant-Subnet Repository and BitQuant submodule
+git clone --branch Miner --recursive https://github.com/OpenGradient/BitQuant-Subnet
+cd BitQuant-Subnet
+
+# Optional: Create Python Virtual Environment (Best Practice)
+python3.13 -m venv venv
+source venv/bin/activate
+
+# Install Requirements
+pip install -r requirements.txt
+pip install -e .
+
+# Setup all the environment variables in .env
+cp .env.example .env
 ```
+
+**Note**: Running a miner node requires substantially higher compute requirements due to the local running of the BitQuant agent. Setup instructions can be found https://github.com/OpenGradient/BitQuant
 
 ## 2. Create wallets 
 
@@ -80,49 +111,11 @@ and
 btcli wallet new_hotkey --wallet.name validator --wallet.hotkey default
 ```
 
-## 3. Get the price of subnet creation
-
-Creating subnets on the testnet is competitive. The cost is determined by the rate at which new subnets are being registered onto the chain. 
-
-By default you must have at least 100 testnet TAO in your owner wallet to create a subnet. However, the exact amount will fluctuate based on demand. The below command shows how to get the current price of creating a subnet.
-
-```bash
-btcli subnet lock_cost --subtensor.network test
-```
-
-The above command will show:
-
-```bash
->> Subnet lock cost: τ100.000000000
-```
-
-## 4. (Optional) Get faucet tokens
+## 3. (Optional) Get faucet tokens
    
 Faucet is disabled on the testnet. Hence, if you don't have sufficient faucet tokens, ask the [Bittensor Discord community](https://discord.com/channels/799672011265015819/830068283314929684) for faucet tokens.
 
-## 5. Purchase a slot
-
-Using the test TAO from the previous step you can register your subnet on the testnet. This will create a new subnet on the testnet and give you the owner permissions to it. 
-
-The below command shows how to purchase a slot. 
-
-**NOTE**: Slots cost TAO to lock. You will get this TAO back when the subnet is deregistered.
-
-```bash
-btcli subnet create --subtensor.network test 
-```
-
-Enter the owner wallet name which gives permissions to the coldkey:
-
-```bash
->> Enter wallet name (default): owner # Enter your owner wallet name
->> Enter password to unlock key: # Enter your wallet password.
->> Register subnet? [y/n]: <y/n> # Select yes (y)
->> ⠇ 📡 Registering subnet...
-✅ Registered subnetwork with netuid: 1 # Your subnet netuid will show here, save this for later.
-```
-
-## 6. Register keys
+## 4. Register keys
 
 This step registers your subnet validator and subnet miner keys to the subnet, giving them the **first two slots** on the subnet.
 
@@ -160,7 +153,7 @@ Follow the prompts:
 >> ✅ Registered
 ```
 
-## 7. Check that your keys have been registered
+## 5. Check that your keys have been registered
 
 This step returns information about your registered keys.
 
@@ -196,7 +189,7 @@ miner    default  1      True   0.00000  0.00000  0.00000    0.00000    0.00000 
                                                                           Wallet balance: τ0.0   
 ```
 
-## 8. Run subnet miner and subnet validator
+## 6. Run subnet miner and subnet validator
 
 Run the subnet miner:
 
@@ -223,7 +216,7 @@ You will see the below terminal output:
 ```
 
 
-## 9. Get emissions flowing
+## 7. Get emissions flowing
 
 Register to the root network using the `btcli`:
 
@@ -237,6 +230,6 @@ Then set your weights for the subnet:
 btcli root weights --subtensor.network test
 ```
 
-## 10. Stopping your nodes
+## 8. Stopping your nodes
 
 To stop your nodes, press CTRL + C in the terminal where the nodes are running.

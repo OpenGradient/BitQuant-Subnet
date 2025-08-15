@@ -82,37 +82,58 @@ These steps initialize your local subtensor chain in development mode. These com
 
 **NOTE**: Watch for any build or initialization outputs in this step. If you are building the project for the first time, this step will take a while to finish building, depending on your hardware.
 
-## 6. Install quant subnet
+## 6. Install BitQuant-Subnet
 
-`cd` to your project directory and clone the bittensor subnet quant repository:
+`cd` to your project directory and clone the BitQuant-Subnet repository:
 
-```bash
-git clone https://github.com/OpenGradient/Quant-Subnet.git 
-```
-
-Navigate to the cloned repository:
+### Validator Setup
 
 ```bash
-cd quant 
-```
+# Install Python3.13 and Python3.13 tools on your OS
+sudo apt update
+sudo apt install python3.13 python3.13-venv python3.13-dev pkg-config
 
-Update the .env variables with your keys and config preferences
-``` bash
-vi .env
-```
+# Clone BitQuant-Subnet Repository and checkout Validator Branch
+git clone https://github.com/OpenGradient/BitQuant-Subnet
+cd BitQuant-Subnet
+git checkout Validator
 
-Make virtualenv
-```bash
-make venv
+# Optional: Create Python Virtual Environment (Best Practice)
+python3.13 -m venv venv
 source venv/bin/activate
-source .env
+
+# Install Requirements
+pip install -r requirements.txt
+pip install -e .
+
+# Set up customized environment variables in .env, or fall back to defaults
+cp .env.example .env
 ```
 
-Install the quant subnet Python package:
+### Miner Setup
 
 ```bash
-python -m pip install -e .
+# Install Python3.13 and Python3.13 tools on your OS
+sudo apt update
+sudo apt install python3.13 python3.13-venv python3.13-dev pkg-config
+
+# Clone BitQuant-Subnet Repository and BitQuant submodule
+git clone --branch Miner --recursive https://github.com/OpenGradient/BitQuant-Subnet
+cd BitQuant-Subnet
+
+# Optional: Create Python Virtual Environment (Best Practice)
+python3.13 -m venv venv
+source venv/bin/activate
+
+# Install Requirements
+pip install -r requirements.txt
+pip install -e .
+
+# Setup all the environment variables in .env
+cp .env.example .env
 ```
+
+**Note**: Running a miner node requires substantially higher compute requirements due to the local running of the BitQuant agent. Setup instructions can be found https://github.com/OpenGradient/BitQuant
 
 ## 7. Set up wallets
 
@@ -180,26 +201,7 @@ You will see:
 >> Balance: τ0.000000000 ➡ τ100.000000000
 ```
 
-## 9. Create a subnet
-
-The below commands establish a new subnet on the local chain. The cost will be exactly τ1000.000000000 for the first subnet you create and you'll have to run the faucet several times to get enough tokens.
-
-```bash
-btcli subnet create --wallet.name owner --subtensor.chain_endpoint ws://127.0.0.1:9944 
-```
-
-You will see:
-
-```bash
->> Your balance is: τ200.000000000
->> Do you want to register a subnet for τ1000.000000000? [y/n]: 
->> Enter password to unlock key: [YOUR_PASSWORD]
->> ✅ Registered subnetwork with netuid: 2
-```
-
-**NOTE**: The local chain will now have a default `netuid` of 1. The second registration will create a `netuid` 2 and so on, until you reach the subnet limit of 8. If you register more than 8 subnets, then a subnet with the least staked TAO will be replaced by the 9th subnet you register.
-
-## 10. Register keys
+## 9. Register keys
 
 Register your subnet validator and subnet miner on the subnet. This gives your two keys unique slots on the subnet. The subnet has a current limit of 128 slots.
 
@@ -232,7 +234,7 @@ Follow the below prompts:
 >> ✅ Registered
 ```
 
-## 11. Add stake 
+## 10. Add stake 
 
 This step bootstraps the incentives on your new subnet by adding stake into its incentive mechanism.
 
@@ -248,7 +250,7 @@ Follow the below prompts:
     τ0.000000000 ➡ τ100.000000000
 ```
 
-## 12. Validate key registrations
+## 11. Validate key registrations
 
 Verify that both the miner and validator keys are successfully registered:
 
@@ -297,7 +299,7 @@ miner    default  1      True   0.00000  0.00000  0.00000    0.00000    0.00000 
 
 ```
 
-## 13. Run subnet miner and subnet validator
+## 12. Run subnet miner and subnet validator
 
 Run the subnet miner and subnet validator. Make sure to specify your subnet parameters.
 
@@ -318,7 +320,7 @@ Check if the SubnetAPI is working:
 ./api_test.py --subtensor.network ws://127.0.0.1:9944 --netuid 2 --wallet.name validator --wallet.hotkey default --timeout 15.0 --specific_uid 2
 ```
 
-## 14. Set weights for your subnet
+## 13. Set weights for your subnet
 
 Register a validator on the root subnet and boost to set weights for your subnet. This is a necessary step to ensure that the subnet is able to receive emmissions.
 
@@ -333,7 +335,7 @@ btcli root register --wallet.name validator --wallet.hotkey default --subtensor.
 btcli root boost --netuid 2 --increase 1 --wallet.name validator --wallet.hotkey default --subtensor.chain_endpoint ws://127.0.0.1:9944
 ```
 
-## 15. Verify your incentive mechanism
+## 14. Verify your incentive mechanism
 
 After a few blocks the subnet validator will set weights. This indicates that the incentive mechanism is active. Then after a subnet tempo elapses (360 blocks or 72 minutes) you will see your incentive mechanism beginning to distribute TAO to the subnet miner.
 
