@@ -78,4 +78,4 @@ async def forward(self):
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
     self.update_scores(rewards, miner_uids)
-    time.sleep(int(os.getenv("VALIDATOR_CADENCE", 180)))
+    time.sleep(int(os.getenv("VALIDATOR_CADENCE", 500)))
