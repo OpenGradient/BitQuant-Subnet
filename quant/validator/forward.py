@@ -1,3 +1,4 @@
+
 # The MIT License (MIT)
 # Copyright © 2025 Quant by OpenGradient
 
@@ -80,13 +81,9 @@ async def forward(self):
     if not wallet_address:
         bt.logging.error("SOLANA_WALLET environment variable is not set. Using a default value.")
         wallet_address = "5HHSqMvTCvgtzdqFb5BbtYjB8cEiJjf8UZ6p5rQczagL"
-    
     question_pool = fetch_question_pool()
-    selected_questions = random.sample(question_pool, min(5, len(question_pool)))
-    combined_query = f"The set of questions to answer are: {', '.join(f'"{q}"' for q in selected_questions)}"
-    
     query = QuantQuery(
-        query=combined_query,
+        query=random.choice(question_pool),
         userID=wallet_address,
         metadata={
             "Create_Proof": "True", 
