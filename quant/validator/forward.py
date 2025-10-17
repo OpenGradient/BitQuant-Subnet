@@ -17,13 +17,12 @@
 
 import os
 import time
-import random
 import bittensor as bt
 
 from quant.protocol import QuantQuery, QuantSynapse
 from quant.validator.reward import get_rewards
 from quant.utils.uids import get_random_uids
-from quant.utils.questions import questions
+from quant.utils.questions import fetch_question
 
 
 async def forward(self):
@@ -46,7 +45,7 @@ async def forward(self):
         wallet_address = "5HHSqMvTCvgtzdqFb5BbtYjB8cEiJjf8UZ6p5rQczagL"
 
     query = QuantQuery(
-        query=random.choice(questions),
+        query=fetch_question(),
         userID=wallet_address,
         metadata={
             "Create_Proof": "True", 
