@@ -17,7 +17,7 @@
 
 
 import time
-import sys
+import os
 
 # Bittensor
 import bittensor as bt
@@ -30,6 +30,8 @@ from quant.validator import forward
 
 # Import the shared Quant agent server module
 from neurons import quant_agent_server
+
+from quant.utils.questioner import Questioner
 
 class Validator(BaseValidatorNeuron):
     """
@@ -46,6 +48,11 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("load_state()")
         self.load_state()
 
+        api_key = os.getenv("GEMINI_API_KEY", "")
+        if not api_key:
+            bt.logging.warning("No GEMINI_API_KEY found in environment variables!")
+
+        self.questioner = Questioner(api_key=api_key)
         # TODO(developer): Anything specific to your use case you can do here
 
     async def forward(self):
