@@ -1,3 +1,8 @@
+import bittensor as bt
+import requests
+import random
+
+
 """
 List of questions that can be answered by the crypto analysis document.
 """
@@ -51,3 +56,35 @@ questions = [
     "What are the top 3 safest memecoins to buy on Base?",
     "What are the top 3 safest memecoins to buy on Ethereum?",
 ]
+
+
+def fetch_question_once(
+    api_url: str = "https://quant-api.opengradient.ai/api/subnet/question",
+    timeout: float = 60.0,
+) -> str:
+    response_obj = requests.get(
+        api_url,
+        timeout=timeout
+    )
+    
+    response_obj.raise_for_status()
+    question_result = response_obj.json()
+    return question_result["question"]
+
+
+def fetch_question(
+    api_url: str = "https://quant-api.opengradient.ai/api/subnet/question",
+    timeout: float = 60.0,
+    retry_count: int = 3,
+) -> str:
+    for i in range(retry_count + 1):
+        try:
+            question = fetch_question_once(api_url, timeout=timeout)
+            bt.logging.info(f"Fetched question: '{question}'")
+            return question
+        except Exception as ex:
+            bt.logging.warning(f"Question fetch failed during try no. {i + 1} on: {ex}")
+
+    question = random.choice(questions)
+    bt.logging.warning(f"Fetching question failed too many times; returning one of the default questions: '{question}'")
+    return question
