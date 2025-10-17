@@ -17,13 +17,11 @@
 
 import os
 import time
-import random
 import bittensor as bt
 
 from quant.protocol import QuantQuery, QuantSynapse
 from quant.validator.reward import get_rewards
 from quant.utils.uids import get_random_uids
-from quant.utils.questions import questions
 
 
 async def forward(self):
@@ -44,9 +42,12 @@ async def forward(self):
     if not wallet_address:
         bt.logging.error("SOLANA_WALLET environment variable is not set. Using a default value.")
         wallet_address = "5HHSqMvTCvgtzdqFb5BbtYjB8cEiJjf8UZ6p5rQczagL"
+    
+    question = self.questioner.choose_question()
+    bt.logging.info(f"Choosen question: '{question}'")
 
     query = QuantQuery(
-        query=random.choice(questions),
+        query=question,
         userID=wallet_address,
         metadata={
             "Create_Proof": "True", 
