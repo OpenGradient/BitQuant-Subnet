@@ -64,10 +64,19 @@ def check_security(query: QuantQuery, response: QuantResponse) -> bool:
 
 def call_llm(prompt: str) -> float:
     """
-    Call the validator's LLM (currently supports Gemini ) and return a score between 0–1.
+    Call the evaluation model (Gemini) with the given prompt and return a normalized score (0–1).
 
-    You may update this code to integrate other LLM providers (OpenAI, Anthropic, etc.) 
-  
+    This function currently supports only the Gemini model. 
+    You may extend it to integrate additional LLM providers if needed.
+
+    Args:
+        prompt (str): The evaluation prompt to send to the model.
+
+    Returns:
+        float: Normalized score between 0 and 1.
+
+    Raises:
+        ValueError: If the provider is unsupported or response is invalid.
     """
     if LLM_PROVIDER.lower() != "gemini":
         raise ValueError(
@@ -76,27 +85,48 @@ def call_llm(prompt: str) -> float:
             "You may update this function to integrate your preferred LLM API."
         )
 
-    import google.generativeai as genai
-    genai.configure(api_key=LLM_API_KEY)
-
-    model = genai.GenerativeModel(LLM_MODEL)
-
-    # Gemini accepts plain text input
-    response = model.generate_content(prompt)
-
-    # Expect Gemini to return structured JSON with a score field
     try:
-        data = json.loads(response.text)
-        score = float(data["score"])
-    except Exception:
-        raise ValueError(
-            "Gemini response did not contain a valid JSON object with a 'score' field. "
-            "Ensure your prompt explicitly requests a JSON output, e.g.:\n"
-            '{"score": 42}'
+        import google.genai as genai
+        from google.genai import types
+        from pydantic import BaseModel, Field
+
+        # Configure Gemini client
+        genai.configure(api_key=LLM_API_KEY)
+        client = genai.Client()
+
+        # Define structured response schema
+        class Scoring(BaseModel):
+            score: int = Field(..., description="The final score of the response")
+
+        # Generate structured content from Gemini
+        response = client.models.generate_content(
+            model=LLM_MODEL,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=Scoring,
+                max_output_tokens=200,
+                temperature=0.0,
+            ),
         )
 
-    # Normalize to a 0–1 scale (assuming 0–50 original scoring)
-    return score / 50.0
+        # Parse model response
+        try:
+            data = json.loads(response.text)
+            score = float(data["score"])
+        except Exception:
+            bt.logging.error(f"Invalid Gemini response: {response.text}")
+            raise ValueError(
+                "Gemini response did not contain valid JSON with a 'score' field. "
+                "Ensure your evaluation prompt enforces structured JSON output."
+            )
+
+        # Normalize to 0–1 range (assuming original scale 0–50)
+        return score / 50.0
+
+    except Exception as e:
+        bt.logging.error(f"Failed to call Gemini evaluation model: {e}")
+        raise
 
 def subnet_evaluation(query: QuantQuery, response: QuantResponse) -> float:
     """Evaluate with security check + local LLM"""
