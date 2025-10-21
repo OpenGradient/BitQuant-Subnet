@@ -17,7 +17,10 @@
 import numpy as np
 import requests
 import json
+import os
 from typing import List, Optional, Dict, Any
+from jinja2 import Environment, FileSystemLoader
+import pathlib
 import bittensor as bt
 from quant.protocol import QuantResponse, QuantQuery
 # from quant.BitQuant.subnet.subnet_methods import subnet_evaluation
@@ -27,36 +30,24 @@ from quant.validator.attestation.periodic import periodic_attestation_check
 # Start periodic attestation check
 periodic_attestation_check()
 
+# LLM Configuration
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
+LLM_API_KEY = os.getenv("LLM_API_KEY")
+LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4")
 
-def bitquant_evaluate(
-    query: QuantQuery, 
-    response: QuantResponse, 
-    api_url: str = "https://quant-api.opengradient.ai/api/subnet/evaluate",
-    timeout: float = 60.0
-) -> Optional[Dict[str, Any]]:
-    """
-    Helper function to evaluate a miner's response using the BitQuant Agent API.
-    The current implementation uses the production BitQuant Agent deployment 
-    (see https://github.com/OpenGradient/BitQuant), but we welcome validators to design 
-    their own subnet query evaluation mechanism.
-    
-    Args:
-        query (QuantQuery): The query that was sent to the miner
-        response (QuantResponse): The response received from the miner  
-        api_url (str): The BitQuant Agent API endpoint URL
-        timeout (float): Request timeout in seconds
-        
-    Returns:
-        Optional[Dict[str, Any]]: The evaluation result from the API, or None if failed
-    """
+# Security check API
+SECURITY_CHECK_URL = "https://quant-api.opengradient.ai/api/subnet/security-check"
+
+# Template setup
+TEMPLATES_DIR = pathlib.Path(__file__).parent / "templates"
+env = Environment(loader=FileSystemLoader(str(TEMPLATES_DIR)))
+
+
+def check_security(query: QuantQuery, response: QuantResponse) -> bool:
+    """Check security with your server API"""
     try:
-        # Prepare the payload matching the expected API format
         payload = {
-            "quant_query": {
-                "query": query.query,
-                "userID": query.userID,
-                "metadata": query.metadata
-            },
+            "quant_query": {"query": query.query, "userID": query.userID, "metadata": query.metadata},
             "quant_response": {
                 "response": response.response,
                 "signature": response.signature.hex() if isinstance(response.signature, bytes) else str(response.signature),
@@ -64,102 +55,64 @@ def bitquant_evaluate(
                 "metadata": response.metadata
             }
         }
-        
-        # Make the API request
-        headers = {
-            'Content-Type': 'application/json'
-        }
-        
-        bt.logging.debug(f"Making evaluation request to {api_url}")
-        bt.logging.trace(f"Payload: {json.dumps(payload, indent=2)}")
-        
-        response_obj = requests.post(
-            api_url,
-            json=payload,
-            headers=headers,
-            timeout=timeout
-        )
-        
-        # Check if request was successful
-        response_obj.raise_for_status()
-        
-        # Parse JSON response
-        evaluation_result = response_obj.json()
-        
-        bt.logging.debug(f"Received evaluation result: {evaluation_result}")
-        return evaluation_result
-        
-    except requests.exceptions.Timeout:
-        bt.logging.warning(f"Timeout occurred while calling BitQuant Agent API (timeout: {timeout}s)")
-        return None
-    except requests.exceptions.ConnectionError:
-        bt.logging.warning("Connection error occurred while calling BitQuant Agent API")
-        return None
-    except requests.exceptions.HTTPError as e:
-        bt.logging.warning(f"HTTP error occurred while calling BitQuant Agent API: {e}")
-        return None
-    except json.JSONDecodeError:
-        bt.logging.warning("Failed to decode JSON response from BitQuant Agent API")
-        return None
+        result = requests.post(SECURITY_CHECK_URL, json=payload, timeout=10.0)
+        return result.json().get("passed", False)
     except Exception as e:
-        bt.logging.error(f"Unexpected error occurred while calling BitQuant Agent API: {e}")
-        return None
+        bt.logging.error(f"Security check failed: {e}")
+        return False
+
+
+def call_llm(prompt: str) -> float:
+    """Call validator's LLM and return score 0-1"""
+    if LLM_PROVIDER == "openai":
+        import openai
+        client = openai.OpenAI(api_key=LLM_API_KEY)
+        result = client.chat.completions.create(
+            model=LLM_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.0,
+            response_format={"type": "json_object"}
+        )
+        score = json.loads(result.choices[0].message.content)["score"]
+        return float(score) / 50.0
+    elif LLM_PROVIDER == "anthropic":
+        import anthropic
+        client = anthropic.Anthropic(api_key=LLM_API_KEY)
+        result = client.messages.create(model=LLM_MODEL, max_tokens=1024, messages=[{"role": "user", "content": prompt}])
+        score = json.loads(result.content[0].text)["score"]
+        return float(score) / 50.0
+    else:
+        raise ValueError(f"Unsupported LLM_PROVIDER: {LLM_PROVIDER}")
 
 
 def subnet_evaluation(query: QuantQuery, response: QuantResponse) -> float:
-    """
-    Evaluate a miner's response using the BitQuant Agent API and return a reward score.
-    
-    Args:
-        query (QuantQuery): The query that was sent to the miner
-        response (QuantResponse): The response received from the miner
-        
-    Returns:
-        float: Reward score between 0.0 and 1.0
-    """
+    """Evaluate with security check + local LLM"""
     try:
-        # Call the BitQuant Agent API for evaluation
-        evaluation_result = bitquant_evaluate(query, response)
-        
-        if evaluation_result is None:
-            bt.logging.warning("Failed to get evaluation from BitQuant Agent API, returning default score")
+        # Security check 
+        if not check_security(query, response):
+            bt.logging.warning("Security check failed")
             return 0.0
-            
-        # Extract score from the evaluation result
-        # The API response format may vary, so we handle different possible structures
-        score = 0.0
         
-        if isinstance(evaluation_result, dict):
-            # Try different possible score field names
-            if 'score' in evaluation_result:
-                score = float(evaluation_result['score'])
-            elif 'reward' in evaluation_result:
-                score = float(evaluation_result['reward'])
-            elif 'evaluation_score' in evaluation_result:
-                score = float(evaluation_result['evaluation_score'])
-            elif 'rating' in evaluation_result:
-                score = float(evaluation_result['rating'])
-            else:
-                bt.logging.warning(f"Unexpected evaluation result format: {evaluation_result}")
-                return 0.0
-                
-        # Ensure score is within valid range [0.0, 1.0]
+        # Load prompt template
+        template = env.get_template("evaluation_prompt.txt")
+        prompt = template.render(user_prompt=query.query, agent_answer=response.response[:4000])
+        
+        # Call validator's LLM
+        score = call_llm(prompt)
         score = max(0.0, min(1.0, score))
         
-        bt.logging.info(f"BitQuant Agent API evaluation score: {score}")
+        bt.logging.info(f"Evaluation score: {score}")
         return score
         
-    except (ValueError, TypeError) as e:
-        bt.logging.error(f"Error parsing evaluation score: {e}")
-        return 0.0
     except Exception as e:
-        bt.logging.error(f"Unexpected error in subnet_evaluation: {e}")
+        bt.logging.error(f"Evaluation error: {e}")
         return 0.0
+
 
 def reward(query: QuantQuery, response: QuantResponse) -> float:
     """
     Calculate the reward for a miner's response to a given query.
-    Uses the subnet_evaluation function to determine the quality of the response.
+    Uses local evaluation instead of calling external API.
 
     Args:
     - query (QuantQuery): The query sent to the miner.
@@ -181,8 +134,7 @@ def reward(query: QuantQuery, response: QuantResponse) -> float:
         return 0.0
     """
     bt.logging.info(f"Evaluating response for query: {query} and response: {response}")
-
-    # Validate the response before evaluation
+  # Validate the response before evaluation
     if response is None:
         bt.logging.warning("Response is None, returning reward score of 0.0")
         return 0.0
@@ -194,6 +146,7 @@ def reward(query: QuantQuery, response: QuantResponse) -> float:
 
     # TODO(developer): Developers can deploy their own evaluation function here.
     # Replace 'subnet_evaluation' with your custom evaluation logic as needed.
+    # Perform local evaluation
     reward_score = subnet_evaluation(query, response)
     return reward_score
 
