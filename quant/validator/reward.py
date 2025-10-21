@@ -31,9 +31,9 @@ from quant.validator.attestation.periodic import periodic_attestation_check
 periodic_attestation_check()
 
 # LLM Configuration
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
 LLM_API_KEY = os.getenv("LLM_API_KEY")
-LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
 
 # Security check API
 SECURITY_CHECK_URL = "https://quant-api.opengradient.ai/api/subnet/security-check"
@@ -63,27 +63,40 @@ def check_security(query: QuantQuery, response: QuantResponse) -> bool:
 
 
 def call_llm(prompt: str) -> float:
-    """Call validator's LLM and return score 0-1"""
-    if LLM_PROVIDER == "openai":
-        import openai
-        client = openai.OpenAI(api_key=LLM_API_KEY)
-        result = client.chat.completions.create(
-            model=LLM_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
-            response_format={"type": "json_object"}
-        )
-        score = json.loads(result.choices[0].message.content)["score"]
-        return float(score) / 50.0
-    elif LLM_PROVIDER == "anthropic":
-        import anthropic
-        client = anthropic.Anthropic(api_key=LLM_API_KEY)
-        result = client.messages.create(model=LLM_MODEL, max_tokens=1024, messages=[{"role": "user", "content": prompt}])
-        score = json.loads(result.content[0].text)["score"]
-        return float(score) / 50.0
-    else:
-        raise ValueError(f"Unsupported LLM_PROVIDER: {LLM_PROVIDER}")
+    """
+    Call the validator's LLM (currently supports Gemini ) and return a score between 0–1.
 
+    You may update this code to integrate other LLM providers (OpenAI, Anthropic, etc.) 
+  
+    """
+    if LLM_PROVIDER.lower() != "gemini":
+        raise ValueError(
+            f"Unsupported LLM_PROVIDER: '{LLM_PROVIDER}'. "
+            "Currently only 'gemini' is supported. "
+            "You may update this function to integrate your preferred LLM API."
+        )
+
+    import google.generativeai as genai
+    genai.configure(api_key=LLM_API_KEY)
+
+    model = genai.GenerativeModel(LLM_MODEL)
+
+    # Gemini accepts plain text input
+    response = model.generate_content(prompt)
+
+    # Expect Gemini to return structured JSON with a score field
+    try:
+        data = json.loads(response.text)
+        score = float(data["score"])
+    except Exception:
+        raise ValueError(
+            "Gemini response did not contain a valid JSON object with a 'score' field. "
+            "Ensure your prompt explicitly requests a JSON output, e.g.:\n"
+            '{"score": 42}'
+        )
+
+    # Normalize to a 0–1 scale (assuming 0–50 original scoring)
+    return score / 50.0
 
 def subnet_evaluation(query: QuantQuery, response: QuantResponse) -> float:
     """Evaluate with security check + local LLM"""
