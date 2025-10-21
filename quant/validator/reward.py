@@ -91,8 +91,7 @@ def call_llm(prompt: str) -> float:
         from pydantic import BaseModel, Field
 
         # Configure Gemini client
-        genai.configure(api_key=LLM_API_KEY)
-        client = genai.Client()
+        client = genai.Client(api_key=LLM_API_KEY)
 
         # Define structured response schema
         class Scoring(BaseModel):
