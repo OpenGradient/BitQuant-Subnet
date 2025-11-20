@@ -14,6 +14,7 @@
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
+
 import numpy as np
 import requests
 import json
@@ -23,6 +24,9 @@ from jinja2 import Environment, FileSystemLoader
 import pathlib
 import bittensor as bt
 from quant.protocol import QuantResponse, QuantQuery
+import opengradient as og
+from opengradient import LlmInferenceMode
+
 # from quant.BitQuant.subnet.subnet_methods import subnet_evaluation
 from quant.validator.attestation.attestation import retrieve_remote_attestation, validate_attestation
 from quant.validator.attestation.periodic import periodic_attestation_check
@@ -30,17 +34,103 @@ from quant.validator.attestation.periodic import periodic_attestation_check
 # Start periodic attestation check
 periodic_attestation_check()
 
-# LLM Configuration
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
-LLM_API_KEY = os.getenv("LLM_API_KEY")
+
+# Model Configuration
+# Validators specify which model they want to use for evaluation
+# Examples:
+#   - "gemini-2.5-flash-lite" (Google)
+#   - "claude-haiku-4-5-20251001" (Anthropic)
+#   - "gpt-4o-mini" (OpenAI)
 LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash-lite")
 
+# Provider API Keys
+# Validators must provide the API key corresponding to their chosen model
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# OpenGradient Network Configuration
+OPENGRADIENT_PRIVATE_KEY = os.getenv("OPENGRADIENT_PRIVATE_KEY") 
+OPENGRADIENT_RPC_URL = os.getenv("OPENGRADIENT_RPC_URL", "http://18.218.115.248:8545")
+
+OPENGRADIENT_CONTRACT_ADDRESS = os.getenv("OPENGRADIENT_CONTRACT_ADDRESS", "0xF78F7d5a7e9f484f0924Cc21347029715bD3B8f4")
+# tocheck with kyle
 # Security check API
 SECURITY_CHECK_URL = "https://quant-api.opengradient.ai/api/subnet/security-check"
 
 # Template setup
 TEMPLATES_DIR = pathlib.Path(__file__).parent / "templates"
 env = Environment(loader=FileSystemLoader(str(TEMPLATES_DIR)))
+
+# Global OpenGradient client
+_og_client = None
+
+
+def get_og_client() -> og.Client:
+    """
+    Initialize and return the OpenGradient SDK client.
+    
+    
+    Returns:
+        og.Client: Initialized OpenGradient client instance
+        
+    Raises:
+        ValueError: If no API keys are configured
+    """
+    global _og_client
+    
+    if _og_client is None:
+        try:
+            # Build client configuration with all network parameters
+            client_config = {
+                "api_url": "https://api.opengradient.ai/v1", 
+                "rpc_url": OPENGRADIENT_RPC_URL,
+                "contract_address": OPENGRADIENT_CONTRACT_ADDRESS,
+            }
+            
+            # Private key is REQUIRED by SDK
+            if OPENGRADIENT_PRIVATE_KEY:
+                # Use provided key
+                client_config["private_key"] = OPENGRADIENT_PRIVATE_KEY
+            else:
+                test_key = "5ad9b639f7172b5b99936b1dfa1f95c04c4a9d2f4ea26019b2f3a65c4ecb3e59"
+                client_config["private_key"] = test_key
+                bt.logging.warning("⚠️  Using test private key (development only, not for production)")
+            
+            # Add all available API keys - SDK will use the correct one based on model
+            api_keys_added = []
+            if GOOGLE_API_KEY:
+                client_config["google_api_key"] = GOOGLE_API_KEY
+                api_keys_added.append("Google")
+            if ANTHROPIC_API_KEY:
+                client_config["anthropic_api_key"] = ANTHROPIC_API_KEY
+                api_keys_added.append("Anthropic")
+            if OPENAI_API_KEY:
+                client_config["openai_api_key"] = OPENAI_API_KEY
+                api_keys_added.append("OpenAI")
+            
+            # Verify at least one API key is configured
+            if not api_keys_added:
+                raise ValueError(
+                    "No API keys configured. Please set at least one of: "
+                    "GOOGLE_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY"
+                )
+            
+            # Initialize OpenGradient client
+            _og_client = og.Client(**client_config)
+            
+            bt.logging.info(
+                f"✅ OpenGradient SDK client initialized\n"
+                f"   Model: {LLM_MODEL}\n"
+                f"   Available providers: {', '.join(api_keys_added)}\n"
+                f"   Network: {OPENGRADIENT_RPC_URL}"
+            )
+            
+        except Exception as e:
+            bt.logging.error(f"❌ Failed to initialize OpenGradient client: {e}")
+            raise
+    
+    return _og_client
 
 
 def check_security(query: QuantQuery, response: QuantResponse) -> bool:
@@ -55,76 +145,75 @@ def check_security(query: QuantQuery, response: QuantResponse) -> bool:
                 "metadata": response.metadata
             }
         }
+        
         result = requests.post(SECURITY_CHECK_URL, json=payload, timeout=10.0)
         return result.json().get("passed", False)
     except Exception as e:
         bt.logging.error(f"Security check failed: {e}")
         return False
 
-
 def call_llm(prompt: str) -> float:
     """
-    Call the evaluation model (Gemini) with the given prompt and return a normalized score (0–1).
+    Call LLM for evaluation via OpenGradient Network.
 
-    This function currently supports only the Gemini model. 
-    You may extend it to integrate additional LLM providers if needed.
-
+    
     Args:
-        prompt (str): The evaluation prompt to send to the model.
-
+        prompt (str): The evaluation prompt
+        
     Returns:
-        float: Normalized score between 0 and 1.
-
-    Raises:
-        ValueError: If the provider is unsupported or response is invalid.
+        float: Normalized score between 0.0 and 1.0
     """
-    if LLM_PROVIDER.lower() != "gemini":
-        raise ValueError(
-            f"Unsupported LLM_PROVIDER: '{LLM_PROVIDER}'. "
-            "Currently only 'gemini' is supported. "
-            "You may update this function to integrate your preferred LLM API."
-        )
-
     try:
-        import google.genai as genai
-        from google.genai import types
-        from pydantic import BaseModel, Field
+        client = get_og_client()
+        
+        bt.logging.info(f"🔄 Routing evaluation request through OpenGradient Network...")
+        bt.logging.debug(f"   Model: {LLM_MODEL}")
+        
 
-        # Configure Gemini client
-        client = genai.Client(api_key=LLM_API_KEY)
-
-        # Define structured response schema
-        class Scoring(BaseModel):
-            score: int = Field(..., description="The final score of the response")
-
-        # Generate structured content from Gemini
-        response = client.models.generate_content(
-            model=LLM_MODEL,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema=Scoring,
-                max_output_tokens=200,
-                temperature=0.0,
-            ),
+        result = client.llm_completion(
+            model_cid=LLM_MODEL,
+            inference_mode=LlmInferenceMode.VANILLA,
+            prompt=prompt,
+            max_tokens=200
         )
-
-        # Parse model response
+        
+        # Extract completion output
+        response_text = result.completion_output
+        
+        if not response_text:
+            raise ValueError("Empty response from OpenGradient SDK")
+        
+        bt.logging.debug(f"Raw response: {response_text[:200]}")
+        
+        # Clean response (remove markdown formatting if present)
+        response_text = response_text.strip()
+        if response_text.startswith("```json"):
+            response_text = response_text.replace("```json", "").replace("```", "").strip()
+        elif response_text.startswith("```"):
+            response_text = response_text.replace("```", "").strip()
+        
+        # Parse JSON response
         try:
-            data = json.loads(response.text)
+            data = json.loads(response_text)
             score = float(data["score"])
-        except Exception:
-            bt.logging.error(f"Invalid Gemini response: {response.text}")
-            raise ValueError(
-                "Gemini response did not contain valid JSON with a 'score' field. "
-                "Ensure your evaluation prompt enforces structured JSON output."
-            )
-
-        # Normalize to 0–1 range (assuming original scale 0–50)
-        return score / 50.0
-
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
+            bt.logging.error(f"❌ Invalid JSON response: {response_text}")
+            raise ValueError(f"Failed to parse score from response: {e}")
+        
+        # Validate and clamp score to expected range [0, 50]
+        if not (0 <= score <= 50):
+            bt.logging.warning(f"⚠️ Score {score} outside [0, 50], clamping...")
+            score = max(0, min(50, score))
+        
+        # Normalize to [0, 1]
+        normalized_score = score / 50.0
+        
+        bt.logging.info(f"✅ Evaluation complete: {score}/50 → {normalized_score:.3f}")
+        
+        return normalized_score
+        
     except Exception as e:
-        bt.logging.error(f"Failed to call Gemini evaluation model: {e}")
+        bt.logging.error(f"❌ LLM evaluation failed: {e}")
         raise
 
 def subnet_evaluation(query: QuantQuery, response: QuantResponse) -> float:
