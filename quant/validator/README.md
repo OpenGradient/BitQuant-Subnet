@@ -6,8 +6,8 @@ A BitQuant validators now may use the OpenGradient SDK for LLM evaluations. This
 
 ### 1. Pull Latest Code
 ```bash
-cd BitQuant
-git pull origin main
+cd BitQuant-Subnet
+git pull origin Validator
 pip install -r requirements.txt
 ```
 
