@@ -18,12 +18,47 @@
 import os
 import time
 import random
+import requests
 import bittensor as bt
 
+from datetime import datetime, timezone
 from quant.protocol import QuantQuery, QuantSynapse
 from quant.validator.reward import get_rewards
 from quant.utils.uids import get_random_uids
 from quant.utils.questions import questions
+_question_pool_cache = {
+    "questions": [],
+    "expires_at": None
+}
+
+
+def fetch_question_pool() -> list:
+    global _question_pool_cache
+    
+    if _question_pool_cache["questions"] and _question_pool_cache["expires_at"]:
+        try:
+            expires_at = datetime.fromisoformat(_question_pool_cache["expires_at"])
+            if datetime.now(timezone.utc) < expires_at:
+                return _question_pool_cache["questions"]
+        except Exception:
+            pass
+    
+    try:
+        api_url = os.getenv("BITQUANT_API_URL", "https://quant-api.opengradient.ai")
+        response = requests.get(f"{api_url}/api/subnet/questions/pool", timeout=10)
+        response.raise_for_status()
+        pool_data = response.json()
+        
+        _question_pool_cache["questions"] = pool_data["questions"]
+        _question_pool_cache["expires_at"] = pool_data["expires_at"]
+        
+        bt.logging.info(f"Fetched {len(pool_data['questions'])} questions from server")
+        return pool_data["questions"]
+    except Exception as e:
+        bt.logging.warning(f"Failed to fetch question pool: {e}")
+        if _question_pool_cache["questions"]:
+            return _question_pool_cache["questions"]
+        return questions
 
 
 async def forward(self):
@@ -45,8 +80,9 @@ async def forward(self):
         bt.logging.error("SOLANA_WALLET environment variable is not set. Using a default value.")
         wallet_address = "5HHSqMvTCvgtzdqFb5BbtYjB8cEiJjf8UZ6p5rQczagL"
 
+    question_pool = fetch_question_pool()
     query = QuantQuery(
-        query=random.choice(questions),
+        query=random.choice(question_pool),
         userID=wallet_address,
         metadata={
             "Create_Proof": "True", 
