@@ -45,7 +45,7 @@ export OPENAI_API_KEY="your_openai_api_key"
 # Install OpenGradient SDK in a virtual environment
 python3 -m venv opengradient-env
 source opengradient-env/bin/activate
-pip install opengradient
+pip install git+https://github.com/OpenGradient/sdk.git@main
 
 # Run the configuration wizard
 opengradient config init
